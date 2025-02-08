@@ -1,0 +1,1 @@
+Please copy env.example to .env file and add necessary API keys.
