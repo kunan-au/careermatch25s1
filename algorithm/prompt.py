@@ -15,12 +15,9 @@ The job description part starts with === 'JOB DESCRIPTION:' === and ends with ==
 The CV (curriculum vitae of a candidate) description part starts with === CV START: === and ends with === CV END: ===. 
 
 Then output the matching, missing and associated skills using the provided JSON structure.
-The matching skills are the skills in the job description part which are also found in the CV (curriculum vitae of a candidate) description part. Only count skills as matching if the wording **exactly matches** between the job description and the CV.  Only include exact phrase matches in the "matching_skills" array. 
-The missing skills are those skills which are in the job description part but not in the CV (curriculum vitae of a candidate) description part. If a skill in the CV is similar or conceptually related to a skill in the job description but **does not match exactly**, consider it as a missing skill.
+The matching skills are the skills in the job description part which are also found in the CV (curriculum vitae of a candidate) description part.
+The missing skills are those skills which are in the job description part but not in the CV (curriculum vitae of a candidate) description part.
 The associated skills are skills related to the job but may not be explicitly mentioned.
-
-
-If no skills match, please specify "No matching skills found" in the matching_skills array, and proceed with the missing and associated skills.
 
 Here are some examples of skills that you might find in the job descriptions and CVs:
 - Wordpress
@@ -56,18 +53,6 @@ Here are some examples of skills that you might find in the job descriptions and
 - Analytical reporting using PowerBI
 - Exposure to ITIL
 
-### Example of correct matching:
-Job description: "Python, Machine Learning"
-CV: "Experience with Python and deep learning models."
-- Matching Skills: "Python" (exact match)
-- Missing Skills: "Machine Learning" (not an exact match)
-
-### Example of incorrect matching:
-Job description: "JavaScript"
-CV: "Experience with Java programming."
-- Matching Skills: []
-- Missing Skills: ["JavaScript"]
-
 Job Description:
 {job_description}
 
@@ -98,7 +83,6 @@ advice_template = """
 Based on the following skill analysis:
 {skill_analysis}
 
-If all skills match (i.e., the 'matching_skills' array contains "All skills match"), please start the advice with "Great job! You have matched all the required skills." and then provide additional advice on how the job seeker can further improve their profile. 
 Please provide 3-5 specific and actionable pieces of advice for the job seeker to improve their suitability for this position. The advice should be concrete, feasible, and directly address the missing skills.
 
 Your response should be in the following format:
@@ -249,85 +233,5 @@ Languages:
 I am passionate about creating efficient, scalable web solutions and continuously improving my skills in full stack development.
 === CV END: ==="""
 
-job_description_edge = """=== 'JOB DESCRIPTION:' ===
-Senior Data Scientist
-
-We are looking for a Senior Data Scientist with the following skills:
-- Python
-- Machine Learning
-- Deep Learning
-- SQL
-- Data Visualization
-- Experience with TensorFlow and Keras
-- Strong problem-solving skills
-
-=== 'END JOB DESCRIPTION' ==="""
-
-cv_edge = """=== CV START: ===
-Jane Doe
-Senior Marketing Specialist
-
-Professional Summary:
-Experienced marketing specialist with over 7 years of experience in managing digital campaigns and analyzing marketing data.
-
-Technical Skills:
-- Social Media Management
-- Email Marketing
-- Google Analytics
-- SEO and SEM
-- Marketing Automation Tools
-- Adobe Photoshop
-
-Education:
-Master's in Marketing, Business School University
-
-Languages:
-- English (Fluent)
-
-=== CV END: ==="""
-
-job_description_all_match = """=== 'JOB DESCRIPTION:' ===
-Senior Full Stack Developer
-
-Required Skills and Experience:
-- JavaScript
-- HTML5
-- CSS3
-- React.js
-- Node.js
-- MySQL
-- Git
-
-=== 'END JOB DESCRIPTION' ==="""
-
-cv_all_match = """=== CV START: ===
-John Smith
-Senior Full Stack Developer
-
-Technical Skills:
-- JavaScript
-- HTML5
-- CSS3
-- React.js
-- Node.js
-- MySQL
-- Git
-
-Experience:
-- Worked on full stack web development using JavaScript, HTML5, CSS3, React.js, and Node.js
-- Developed back-end APIs using Node.js and managed databases with MySQL
-
-Education:
-Bachelor of Science in Computer Science
-
-=== CV END: ==="""
-
-
 result = analyze_cv_and_job(job_description, cv)
 print(json.dumps(result, indent=2))
-
-# test_result = analyze_cv_and_job(job_description_edge, cv_edge)
-# print(json.dumps(test_result, indent=2))
-
-# all_match_result = analyze_cv_and_job(job_description_all_match, cv_all_match)
-# print(json.dumps(all_match_result, indent=2))
