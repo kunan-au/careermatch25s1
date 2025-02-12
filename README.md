@@ -2,180 +2,168 @@
 
 ## Description
 
-Career Match is a revolutionary new job search information service platform that matches job searchers based on their talents and preferences. Job seekers only need to build a profile on the Career Match platform, which includes a CV, wage expectations, and career goals, to receive job listings for relevant employment.
-In terms of technological implementation, Career Match members filter job applicants' information by keywords to match the best candidates with open positions using machine learning technology and natural language processing models.
+**Career Match** is a revolutionary job search information service platform that matches job seekers based on their talents and preferences. Users only need to build a profile, including their CV, salary expectations, and career goals, to receive job listings tailored to their skills and aspirations.
 
-Legacy project repository: https://gitlab.com/hideontree/grow_right
+From a technological perspective, Career Match utilizes **machine learning** and **natural language processing (NLP)** to filter job applicants' information by keywords, ensuring the best candidates are matched with open positions.
 
+This platform is built on **AWS Cloud** infrastructure, incorporating an **end-to-end data pipeline**, **data warehouse**, and **data lake** to efficiently store, process, and analyze job and applicant data. The system is designed for scalability and high availability, ensuring seamless job matching and recommendation processes.
+
+## Presentation & Landing Page
+
+- View the official **Canva slides**: [Presentation](https://www.canva.com/design/DAGeslzAspM/7_6c2asRIXdfvrKGOuL54w/edit?utm_content=DAGeslzAspM&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton).
+- Explore the **Landing Page**: [Career Match Website](https://kendallan27.my.canva.site/)
 
 ## Project Startup Guide
 
-### A. First Set-up and Starting the Project
+### A. Initial Setup & Starting the Project
 
-#### 1. Git the code from Gitlab page [https://gitlab.com/yupeiyuan0108/career-match-vite-fastapi](https://gitlab.com/yupeiyuan0108/career-match-vite-fastapi).
-
-#### 2. Open the folder `career-match-vite-fastapi` in Visual Studio Code.
-
-#### 3. Open Docker Desktop.
-
-#### 4. Open a _new_ terminal on VSCode and input those commands to activate backend:
+#### 1. Clone the repository
 
 ```bash
-cd server
-cp .env.example .env
-docker network create app_main
-docker-compose up -d --build
+ git clone https://github.com/kunan-au/careermatch25s1.git
 ```
-Those commands are just for **_first set-up_**.
 
-And after doing that, you shall see 3 new containers has been added on Docker.
-
-#### 5. Start all three containers: `app`,`app_db`, `app_redis` on Docker.
-
-If you are a Windows system user, you may not able to open this container:  `app`
-
-Please click [D-issues-you-may-face](#d-issues-you-may-face) for further information.
-
-
-
-#### 6. Open a new terminal on VSCode and input those commands to activate frontend:
+#### 2. Open the project in VS Code
 
 ```bash
-cd client
-npm install # Install the dependencies
-npm run dev # Start the development server
+ cd career-match-vite-fastapi
+ code .
 ```
 
-Now you shall see below showing:
-> career-match@0.0.0 dev
-> 
-> vite
+#### 3. Start Docker
+Ensure **Docker Desktop** is running.
 
-  ➜  Local:   http://localhost:5173/
-
-  ➜  Network: use --host to expose
-
-  ➜  press h + enter to show help
-  
-#### 7. Copy the link and paste it in a browser.
-
-Now you shall see our page.
-
-### B. Running Project
-
-Just follow those steps:
-
-#### 1. Open the folder `career-match-vite-fastapi` in Visual Studio Code.
-
-#### 2. Open Docker Desktop and start all three containers.
-
-#### 3. Open a _new_ terminal on VSCode and input those commands:
+#### 4. Set up and start the backend
 
 ```bash
-cd client
-npm install 
-npm run dev
+ cd server
+ cp .env.example .env
+ docker network create app_main
+ docker-compose up -d --build
 ```
-#### 4. Copy the link and paste it in a browser.
+
+Once complete, you should see three new containers in Docker: **app**, **app_db**, and **app_redis**.
+
+#### 5. Start all three containers manually in Docker if necessary.
+
+> **Windows users:** If the `app` container does not start, refer to [Issues & Troubleshooting](#d-issues-you-may-face).
+
+#### 6. Set up and start the frontend
+
+```bash
+ cd client
+ npm install  # Install dependencies
+ npm run dev  # Start the development server
+```
+
+You should see output similar to:
+
+```
+ career-match@0.0.0 dev
+ vite
+ ➜ Local:   http://localhost:5173/
+ ➜ Network: use --host to expose
+ ➜ Press h + enter to show help
+```
+
+#### 7. Open the project in a browser
+Copy and paste `http://localhost:5173/` into your browser to access the platform.
+
+---
+
+### B. Running the Project (After Setup)
+
+1. Open the `career-match-vite-fastapi` folder in **VS Code**.
+2. Open **Docker Desktop** and start all three containers.
+3. Open a **new terminal** in VS Code and start the frontend:
+
+```bash
+ cd client
+ npm install  
+ npm run dev
+```
+
+4. Open `http://localhost:5173/` in a browser.
+
+---
 
 ### C. Navigating the Interface
 
-#### 1. All features are available only after logging in.
+#### 1. **Login is required to access features**
+Sign up first, then log in.
 
-You should sign up first and then you can log in.
+**Example credentials:**
 
-Here is an example account for you to sign up:
+- **Email:** `user@example.com`
+- **Password:** `CareerMatch1234!`
 
-Account name:
+#### 2. **Switching pages**
+Routes are defined in `client/src/router.tsx`.
+For example, to view the user profile page:
 
-> user@example.com
-
-Password:
-
-> CareerMatch1234!
-
-#### 2. Switch to Different Pages
-
-Click [client\src\router.tsx](client\src\router.tsx) for different pages link name.
-
-If you are still in gitlab page, click [client/src/router.tsx](client/src/router.tsx) for different pages link name.
-
-For example, if you want to switch to user profile page, the link should be like this:
-> http://localhost:5173/profile
-
-#### 3. Shut down the project.
-
-Press Ctrl and C:
-> ^C ^CTerminate batch job (Y/N)? 
-
-Then press y.
-
-### D. Issues you may face
-#### 1. Fail to start all 3 containers for Windows users:
-Follow these steps:
-
-(1) Locate and delete the career-match-vite-fastapi folder on your computer.
-
-(2) Open the Command Prompt on Windows(cmd) and navigate to the directory where you want to place the project folder.
-
-(3) Enter the command:
-
-
-```bash
-git config --global core.autocrlf input 
-git clone https://gitlab.com/yupeiyuan0108/career-match-vite-fastapi.git
+```
+ http://localhost:5173/profile
 ```
 
-This step is designed to ensure that when cloning the project, LF (Unix-style) line endings are preserved instead of CRLF (Windows-style). It is necessary to set the `core.autocrlf` option accordingly.
+#### 3. **Shutting down the project**
+Press **Ctrl + C** in the terminal:
 
-(4) Open Docker Desktop.
-
-(5) Open Visual Studio Code and perform the initial configuration (first set-up) to activate the backend.
-
-(6) Check Docker, and you should see that all containers are now running correctly.
-
-
-#### 2. Fail to install npm:
-Check if you have sudo client folder.
-
-#### 3. Fail to SignUp/in
-When attempting to sign up or sign in a user, you might encounter the following error message:
-
-> Something went wrong connecting to the server. Please try again later.
-
-Follow these steps:
-
-(1)Apply database migrations:
-
-Enter the following commands in VScode:
-
-```bash
-cd server
-docker-compose run app alembic upgrade head
-docker-compose down
-docker-compose up -d --build
+```
+ ^C ^C Terminate batch job (Y/N)? 
 ```
 
-(2)Restart the development server:
+Press `y` to confirm.
+
+---
+
+### D. Issues & Troubleshooting
+
+#### 1. **Containers fail to start on Windows**
+
+Try the following steps:
+
+1. Delete the `career-match-vite-fastapi` folder.
+2. Open **Command Prompt** and navigate to your desired directory.
+3. Clone the project with the correct line ending settings:
 
 ```bash
-cd client
-npm run dev
+ git config --global core.autocrlf input 
+ git clone https://gitlab.com/yupeiyuan0108/career-match-vite-fastapi.git
 ```
-### E. Further Information
 
-[Backend Readme](server\README.md)
+4. Open **Docker Desktop**.
+5. Open **VS Code** and redo the **first setup**.
+6. Check **Docker** to verify all containers are running.
 
-[Frontend Readme](clinet\README.md)
+#### 2. **npm installation issues**
+Check if you have permission to access the `client` folder.
 
-If you are still in gitlab page, click: 
+#### 3. **Login/Signup fails**
+If you see this error:
 
+```
+Something went wrong connecting to the server. Please try again later.
+```
 
-[Backend Readme](server/README.md)
+Try applying database migrations:
 
-[Frontend Readme](clinet/README.md)
+```bash
+ cd server
+ docker-compose run app alembic upgrade head
+ docker-compose down
+ docker-compose up -d --build
+```
 
+Then restart the frontend:
 
-for further information.
+```bash
+ cd client
+ npm run dev
+```
 
+---
 
+### E. Additional Information
+
+- [Backend Readme](server/README.md)
+- [Frontend Readme](client/README.md)
