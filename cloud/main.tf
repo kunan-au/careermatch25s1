@@ -200,3 +200,18 @@ module "glue" {
   glue_script_path    = "notebooks/test.ipynb"
   s3_bucket_name      = "sandbox-analytics-348eda"
 }
+
+module "emr" {
+  source               = "./modules/emr"
+  cluster_name         = "ecommerce-etl-cluster"
+  release_label        = "emr-6.7.0"
+  applications         = ["Spark", "Hive"]
+  s3_log_bucket        = "my-ecommerce-logs"
+  s3_bootstrap         = "my-ecommerce-scripts"
+  key_name             = "my-key-pair"
+  subnet_id            = module.vpc.subnet_id
+  security_group       = module.vpc.security_group_id
+  master_instance_type = "m5.xlarge"
+  core_instance_type   = "m5.xlarge"
+  core_instance_count  = 2
+}
