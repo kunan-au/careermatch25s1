@@ -1,12 +1,11 @@
 resource "aws_lambda_function" "trigger_glue_lambda" {
-  filename      = "lambda_trigger_glue.zip"
-  function_name = "trigger-glue-etl"
+  function_name = var.lambda_function_name
   role          = aws_iam_role.lambda_role.arn
-  handler       = "lambda_function.lambda_handler"
-  runtime       = "python3.9"
+  runtime       = var.lambda_runtime
+  handler       = var.lambda_handler
 
-  s3_bucket = "sandbox-analytics-${random_id.unique_suffix.hex}"
-  s3_key    = "lambda_trigger_glue.zip"
+  s3_bucket = "sandbox-analytics-${var.unique_suffix}" # ✅ Fix this
+  s3_key    = var.lambda_s3_key
 
   environment {
     variables = {

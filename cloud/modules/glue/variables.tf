@@ -18,6 +18,12 @@ variable "s3_raw_data_path" {
   type        = string
 }
 
+variable "s3_curated_path" {
+  description = "S3 bucket path for curated data"
+  type        = string
+}
+
+
 variable "s3_temp_path" {
   description = "S3 path for Glue temporary storage"
   type        = string

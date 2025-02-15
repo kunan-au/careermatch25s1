@@ -183,6 +183,10 @@ module "rds_public" {
   environment           = var.environment
 }
 
+module "iam" {
+  source = "./modules/iam"
+}
+
 # **Deploy AWS Glue**
 module "glue" {
   source          = "./modules/glue"
@@ -209,4 +213,5 @@ module "lambda" {
   lambda_s3_bucket      = aws_s3_bucket.sandbox_analytics_bucket.bucket
   lambda_s3_key         = "lambda_trigger_glue.zip"
   glue_job_name         = module.glue.glue_job_name
+  unique_suffix         = random_id.unique_suffix.hex  # ✅ Add this
 }

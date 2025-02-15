@@ -1,10 +1,3 @@
-# General AWS Configuration
-variable "aws_region" {
-  description = "AWS region for deployment"
-  type        = string
-  default     = "ap-southeast-2"
-}
-
 # EC2 Configuration
 variable "ami_id" {
   description = "AMI ID for the EC2 instance"
@@ -155,4 +148,14 @@ variable "s3_temp_path" {
   description = "S3 path for Glue temporary storage"
   type        = string
   default     = "temp/"
+}
+
+variable "username" {
+  description = "Database username"
+  type        = string
+}
+
+variable "glue_job_name" {
+  description = "AWS Glue Job Name"
+  type        = string
 }

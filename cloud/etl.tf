@@ -1,8 +1,3 @@
-# Provider Configuration
-provider "aws" {
-  region = var.aws_region
-}
-
 # **Ensure RDS is Created Before Running ETL**
 data "aws_rds_cluster" "rds" {
   db_cluster_identifier = module.rds_private.name

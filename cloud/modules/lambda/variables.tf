@@ -35,3 +35,8 @@ variable "glue_job_name" {
   description = "Name of the AWS Glue job triggered by Lambda"
   type        = string
 }
+
+variable "unique_suffix" {
+  description = "Random suffix for S3 bucket"
+  type        = string
+}

@@ -26,22 +26,34 @@ resource "aws_iam_policy" "glue_s3_access" {
 }
 
 # IAM Role for AWS Glue
-resource "aws_iam_role" "glue_etl_role" {
-  name = "career-match-glue-etl-role"
-
+resource "aws_iam_role" "glue_role" {
+  name = "glue-job-role"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Principal = {
-          Service = "glue.amazonaws.com"
-        }
-        Action = "sts:AssumeRole"
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = "glue.amazonaws.com"
       }
-    ]
+    }]
   })
 }
+
+resource "aws_iam_role" "lambda_role" {
+  name = "lambda-job-role"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = "lambda.amazonaws.com"
+      }
+    }]
+  })
+}
+
 
 # Attach Glue S3 Access Policy to the Role
 resource "aws_iam_role_policy_attachment" "glue_s3_attachment" {
