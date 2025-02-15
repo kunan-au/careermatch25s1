@@ -34,7 +34,7 @@ resource "aws_s3_bucket" "sandbox_analytics_bucket" {
 resource "aws_s3_bucket_public_access_block" "sandbox_analytics_bucket_block" {
   bucket                  = aws_s3_bucket.sandbox_analytics_bucket.id
   block_public_acls       = false
-  block_public_policy     = false
+  block_public_policy     = false  # Change this from `true` to `false`
   ignore_public_acls      = false
   restrict_public_buckets = false
 }
@@ -190,113 +190,4 @@ module "rds_public" {
   security_group_id     = module.vpc.public_security_group_id
   subnet_ids            = module.vpc.public_subnet_ids
   environment           = var.environment
-}
-
-# Glue Module
-module "glue" {
-  source              = "./modules/glue"
-  environment         = var.environment
-  glue_script_name    = "test"  # Use job name without file extension
-  glue_script_path    = "notebooks/test.ipynb"
-  s3_bucket_name      = "sandbox-analytics-348eda"
-}
-
-module "emr" {
-  source               = "./modules/emr"
-  cluster_name         = "ecommerce-etl-cluster"
-  release_label        = "emr-6.7.0"
-  applications         = ["Spark", "Hive"]
-  s3_log_bucket        = "ecommerce-emr-logs"
-  s3_bootstrap         = "ecommerce-bootstrap"
-  key_name             = "my-key-pair"
-  subnet_id            = module.vpc.subnet_id
-  security_group       = module.vpc.security_group_id
-  master_instance_type = "m5.xlarge"
-  core_instance_type   = "m5.xlarge"
-  core_instance_count  = 2
-}
-
-resource "aws_emr_step" "spark_etl" {
-  name          = "Run Spark ETL"
-  cluster_id    = module.emr.emr_cluster_id
-  action_on_failure = "CONTINUE"
-
-  hadoop_jar_step {
-    jar     = "command-runner.jar"
-    args    = ["spark-submit", "s3://my-emr-scripts/etl_spark.py"]
-  }
-}
-
-
-# Firehose Module
-module "firehose" {
-  source          = "./modules/firehose"
-  stream_name     = "ecommerce-firehose-stream"
-  s3_bucket_name  = module.s3_firehose.bucket_name
-  security_group  = module.vpc.security_group_id
-}
-
-# Firehose S3 Bucket (For Staging Data)
-module "s3_firehose" {
-  source = "./modules/s3-buckets"
-
-  bucket_name  = "ecommerce-firehose-data"
-  force_destroy = var.force_destroy
-  environment   = var.environment
-  purpose       = "Kinesis Firehose Staging"
-}
-
-# Attach Firehose IAM Role for Accessing S3
-resource "aws_iam_role" "firehose_role" {
-  name = "firehose_delivery_role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Action = "sts:AssumeRole"
-      Effect = "Allow"
-      Principal = {
-        Service = "firehose.amazonaws.com"
-      }
-    }]
-  })
-}
-
-resource "aws_iam_policy" "firehose_s3_access_policy" {
-  name = "firehose_s3_access_policy"
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "s3:PutObject",
-          "s3:GetBucketLocation",
-          "s3:ListBucket"
-        ]
-        Resource = [
-          module.s3_firehose.bucket_arn,
-          "${module.s3_firehose.bucket_arn}/*"
-        ]
-      }
-    ]
-  })
-}
-
-resource "aws_iam_role_policy_attachment" "firehose_s3_attach" {
-  role       = aws_iam_role.firehose_role.name
-  policy_arn = aws_iam_policy.firehose_s3_access_policy.arn
-}
-
-
-resource "aws_emr_step" "spark_etl_step" {
-  name          = "Spark ETL Job"
-  cluster_id    = aws_emr_cluster.emr_cluster.id
-  action_on_failure = "CONTINUE"
-
-  hadoop_jar_step {
-    jar     = "command-runner.jar"
-    args    = ["spark-submit", "s3://my-emr-scripts/etl_spark.py"]
-  }
 }

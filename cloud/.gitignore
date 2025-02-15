@@ -1,3 +1,7 @@
 .terraform/
 *.tfstate
 *.tfstate.backup
+
+echo "private_rds_password.txt" >> cloud/.gitignore
+echo "public_rds_password.txt" >> cloud/.gitignore
+echo "ec2_private_key.pem" >> cloud/.gitignore

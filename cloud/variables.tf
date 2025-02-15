@@ -1,3 +1,11 @@
+# General AWS Configuration
+variable "aws_region" {
+  description = "AWS region for deployment"
+  type        = string
+  default     = "ap-southeast-2"
+}
+
+# EC2 Configuration
 variable "ami_id" {
   description = "AMI ID for the EC2 instance"
   type        = string
@@ -10,6 +18,7 @@ variable "instance_type" {
   default     = "t3.micro"
 }
 
+# Networking (VPC & Subnets)
 variable "environment" {
   description = "Deployment environment (dev, staging, prod)"
   type        = string
@@ -34,6 +43,7 @@ variable "private_subnet_cidrs" {
   default     = ["10.0.3.0/24", "10.0.4.0/24"]
 }
 
+# RDS Database Configuration
 variable "allocated_storage" {
   description = "Allocated storage for the RDS instance in GB"
   type        = number
@@ -70,7 +80,7 @@ variable "db_name" {
   default     = "mydatabase"
 }
 
-variable "username" {
+variable "rds_username" {
   description = "Master username for the RDS instance"
   type        = string
   default     = "admin"
@@ -82,27 +92,20 @@ variable "skip_final_snapshot" {
   default     = true
 }
 
-variable "ssh_access_ip" {
-  description = "IP address or range allowed to SSH into EC2 instances"
-  type        = string
-  default     = "0.0.0.0/0" # Replace with your IP for security
-}
-
 variable "publicly_accessible" {
   description = "Whether the RDS instance should be publicly accessible"
   type        = bool
   default     = false
 }
 
-variable "tags" {
-  description = "Additional tags for all resources"
-  type        = map(string)
-  default     = {
-    Project = "Ecommerce"
-    Owner   = "DevOps"
-  }
+# Security
+variable "ssh_access_ip" {
+  description = "IP address or range allowed to SSH into EC2 instances"
+  type        = string
+  default     = "0.0.0.0/0" # Replace with your IP for security
 }
 
+# S3 Buckets
 variable "acl" {
   description = "ACL for the buckets"
   type        = string
@@ -113,4 +116,43 @@ variable "force_destroy" {
   description = "Whether to allow bucket destruction"
   type        = bool
   default     = false
+}
+
+# Tags for Resources
+variable "tags" {
+  description = "Additional tags for all resources"
+  type        = map(string)
+  default     = {
+    Project = "Ecommerce"
+    Owner   = "DevOps"
+  }
+}
+
+# AWS Glue
+variable "glue_script_name" {
+  description = "Name of the Glue job (e.g., glue-etl-to-rds)"
+  type        = string
+  default     = "glue-etl-to-rds"
+}
+
+variable "glue_script_path" {
+  description = "Path to the script in the S3 bucket (e.g., scripts/glue_etl.py)"
+  type        = string
+  default     = "scripts/glue_etl.py"
+}
+
+variable "s3_bucket_name" {
+  description = "S3 bucket where the Glue script is stored"
+  type        = string
+}
+
+variable "s3_raw_data_path" {
+  description = "S3 path where raw data is stored"
+  type        = string
+}
+
+variable "s3_temp_path" {
+  description = "S3 path for Glue temporary storage"
+  type        = string
+  default     = "temp/"
 }
