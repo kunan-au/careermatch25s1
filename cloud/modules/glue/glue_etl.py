@@ -1,57 +1,93 @@
 import sys
-import boto3
-import pyspark.sql.functions as F
+import logging
+import re
+import pandas as pd
+from bs4 import BeautifulSoup
+from awsglue.transforms import *
+from awsglue.utils import getResolvedOptions
+from pyspark.sql import SparkSession
 from awsglue.context import GlueContext
 from awsglue.job import Job
-from pyspark.context import SparkContext
-from pyspark.sql import SparkSession
-from awsglue.utils import getResolvedOptions
-import pymysql
 
-# Get input arguments from Terraform
-args = getResolvedOptions(sys.argv, ["S3_INPUT_PATH", "RDS_ENDPOINT", "RDS_USER", "RDS_PASSWORD", "RDS_DATABASE"])
+# Setup logging
+logging.basicConfig(filename="etl_logs.log", level=logging.INFO, format="%(asctime)s - %(message)s")
 
-# Initialize Glue and Spark
-sc = SparkContext()
-glueContext = GlueContext(sc)
-spark = glueContext.spark_session
+# Parse AWS Glue arguments
+args = getResolvedOptions(sys.argv, [
+    "JOB_NAME",
+    "s3_raw_data_path",
+    "s3_curated_path"
+])
 
-# Read raw data from S3
-df = spark.read.option("header", "true").csv(args["S3_INPUT_PATH"])
+# Initialize Spark and Glue Context
+spark = SparkSession.builder.appName("ETLJob").getOrCreate()
+glueContext = GlueContext(spark.sparkContext)
+job = Job(glueContext)
+job.init(args["JOB_NAME"], args)
 
-# Data Transformation: Convert age to integer
-df = df.withColumn("age", F.col("age").cast("int"))
+# Define S3 paths
+raw_data_path = "s3://" + args["s3_raw_data_path"] + "/raw-data/"
+curated_data_path = "s3://" + args["s3_curated_path"] + "/cleaned-data/"
 
-# Convert DataFrame to Pandas
-pandas_df = df.toPandas()
+logging.info("Loading raw resume data from: " + raw_data_path)
 
-# Connect to RDS
-conn = pymysql.connect(
-    host=args["RDS_ENDPOINT"],
-    user=args["RDS_USER"],
-    password=args["RDS_PASSWORD"],
-    database=args["RDS_DATABASE"]
-)
-cursor = conn.cursor()
+# Load raw data from S3
+df = spark.read.option("header", True).csv(raw_data_path)
 
-# Create Table (if not exists)
-cursor.execute("""
-    CREATE TABLE IF NOT EXISTS users (
-        id INT PRIMARY KEY,
-        name VARCHAR(255),
-        email VARCHAR(255),
-        age INT,
-        city VARCHAR(255)
-    )
-""")
+# Function to clean HTML content
+def clean_html(text):
+    if text is None or not isinstance(text, str):
+        return ""
+    text = BeautifulSoup(text, "html.parser").get_text()
+    text = re.sub(r'\s+', ' ', text).strip()
+    return text
 
-# Insert Data into RDS
-for _, row in pandas_df.iterrows():
-    cursor.execute("INSERT INTO users (id, name, email, age, city) VALUES (%s, %s, %s, %s, %s)", 
-                   (row["id"], row["name"], row["email"], row["age"], row["city"]))
+# Function to clean text
+def clean_text(text):
+    if text is None or not isinstance(text, str):
+        return ""
+    text = re.sub(r'[^\x00-\x7F]+', '', text)  # Remove non-ASCII
+    text = re.sub(r'\s+', ' ', text)  # Normalize spaces
+    text = re.sub(r'[^\w\s.,!?-]', '', text)  # Remove special characters
+    return text.lower().strip()
 
-conn.commit()
-cursor.close()
-conn.close()
+# Function to extract emails
+def extract_email(text):
+    match = re.findall(r'[\w\.-]+@[\w\.-]+\.\w+', text)
+    return match[0] if match else None
 
-print("✅ Glue ETL Completed: Data Loaded into RDS!")
+# Function to extract phone numbers
+def extract_phone(text):
+    match = re.findall(r'\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}', text)
+    return match[0] if match else None
+
+# Function to extract skills dynamically based on the Category column
+def extract_skills(text, category):
+    if category is None or text is None:
+        return ""
+    category_words = category.split()
+    found_skills = [word for word in category_words if word.lower() in text.lower()]
+    return ", ".join(found_skills) if found_skills else None
+
+# Apply transformations
+df = df.withColumn("Resume_clean", df["Resume_html"].cast("string"))
+df = df.withColumn("Resume_clean", df["Resume_clean"].apply(clean_html))
+df = df.withColumn("Resume_clean", df["Resume_clean"].apply(clean_text))
+df = df.withColumn("Resume_summary", df["Resume_s"].apply(clean_text))
+df = df.withColumn("Email", df["Resume_clean"].apply(extract_email))
+df = df.withColumn("Phone", df["Resume_clean"].apply(extract_phone))
+df = df.withColumn("Extracted_Skills", df.apply(lambda row: extract_skills(row["Resume_clean"], row["Category"]), axis=1))
+
+# Drop unwanted columns
+df = df.drop("Resume_html", "Resume_s")
+
+# Remove duplicates
+df = df.dropDuplicates(["ID"])
+
+# Save cleaned data to the curated S3 bucket
+df.write.mode("overwrite").parquet(curated_data_path)
+
+logging.info("✅ Cleaned Data Saved to: " + curated_data_path)
+
+# Commit job
+job.commit()
