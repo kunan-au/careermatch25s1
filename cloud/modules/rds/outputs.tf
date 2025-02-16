@@ -9,3 +9,13 @@ output "rds_password_file" {
   description = "File path of the saved RDS password"
   value       = local_file.rds_password_file.filename
 }
+
+output "rds_instance_identifier" {
+  description = "Identifier of the RDS instance"
+  value       = aws_db_instance.rds_instance.id
+}
+
+data "aws_db_instance" "rds" {
+  db_instance_identifier = aws_db_instance.rds_instance.id
+}
+

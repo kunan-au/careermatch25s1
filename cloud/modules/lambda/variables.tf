@@ -17,12 +17,12 @@ variable "lambda_runtime" {
 }
 
 variable "lambda_role_arn" {
-  description = "IAM Role ARN to assign to Lambda"
+  description = "IAM Role ARN for the Lambda function"
   type        = string
 }
 
 variable "lambda_s3_bucket" {
-  description = "S3 bucket where the Lambda ZIP is stored"
+  description = "S3 bucket where Lambda code is stored"
   type        = string
 }
 
@@ -32,11 +32,46 @@ variable "lambda_s3_key" {
 }
 
 variable "glue_job_name" {
-  description = "Name of the AWS Glue job triggered by Lambda"
+  description = "AWS Glue Job Name"
   type        = string
 }
 
-variable "unique_suffix" {
-  description = "Random suffix for S3 bucket"
+variable "glue_role_arn" {
+  description = "IAM Role ARN for AWS Glue"
   type        = string
+}
+
+variable "s3_bucket_name" {
+  description = "S3 bucket for storing ETL scripts"
+  type        = string
+}
+
+variable "glue_script_path" {
+  description = "Path of the Glue script in S3"
+  type        = string
+}
+
+variable "s3_temp_path" {
+  description = "Temporary S3 storage path for Glue"
+  type        = string
+}
+
+variable "s3_raw_data_path" {
+  description = "S3 path where raw data is stored"
+  type        = string
+}
+
+variable "s3_curated_path" {
+  description = "S3 path for curated data"
+  type        = string
+}
+
+variable "lambda_role_name" {
+  type        = string
+  description = "IAM Role Name for Lambda"
+}
+
+variable "unique_suffix" {
+  type        = string
+  description = "Random suffix for unique resource names"
 }

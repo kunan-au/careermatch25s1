@@ -8,17 +8,17 @@ output "lambda_function_arn" {
   value       = aws_lambda_function.trigger_glue_lambda.arn
 }
 
-output "lambda_role_arn" {
-  description = "IAM Role ARN associated with Lambda"
-  value       = aws_iam_role.lambda_role.arn
-}
-
 output "lambda_s3_bucket" {
   description = "S3 bucket where the Lambda function ZIP is stored"
-  value       = "sandbox-analytics-${random_id.unique_suffix.hex}"
+  value       = "sandbox-analytics-${var.unique_suffix}"  # ✅ Use `var.unique_suffix`
 }
 
 output "lambda_s3_key" {
   description = "S3 key (path) for the Lambda ZIP file"
   value       = "lambda_trigger_glue.zip"
+}
+
+output "lambda_role_arn" {
+  description = "IAM Role ARN for the Lambda function"
+  value       = aws_iam_role.lambda_role.arn
 }

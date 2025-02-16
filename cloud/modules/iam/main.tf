@@ -1,6 +1,36 @@
+# Glue IAM Role
+resource "aws_iam_role" "glue_role" {
+  name = var.glue_role_name
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Principal = { Service = "glue.amazonaws.com" }
+      Action = "sts:AssumeRole"
+    }]
+  })
+}
+
+resource "aws_iam_role" "glue_etl_role" {
+  name               = var.glue_role_name
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": { "Service": "glue.amazonaws.com" },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
+}
+
+# Glue IAM Policy
 resource "aws_iam_policy" "glue_s3_access" {
-  name        = "career-match-glue-s3-access"
-  description = "Allows AWS Glue to read from Raw S3 and write to Curated S3"
+  name        = "glue_s3_access"
+  description = "Allows Glue to access S3"
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -9,60 +39,72 @@ resource "aws_iam_policy" "glue_s3_access" {
         Effect   = "Allow"
         Action   = ["s3:GetObject", "s3:ListBucket"]
         Resource = [
-          "arn:aws:s3:::${aws_s3_bucket.raw_data_bucket.id}",
-          "arn:aws:s3:::${aws_s3_bucket.raw_data_bucket.id}/*"
+          "${var.raw_data_bucket_arn}",
+          "${var.raw_data_bucket_arn}/*"
         ]
       },
       {
         Effect   = "Allow"
         Action   = ["s3:PutObject", "s3:ListBucket"]
         Resource = [
-          "arn:aws:s3:::${aws_s3_bucket.curated_data_bucket.id}",
-          "arn:aws:s3:::${aws_s3_bucket.curated_data_bucket.id}/*"
+          "${var.curated_data_bucket_arn}",
+          "${var.curated_data_bucket_arn}/*"
         ]
       }
     ]
   })
 }
 
-# IAM Role for AWS Glue
-resource "aws_iam_role" "glue_role" {
-  name = "glue-job-role"
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Action = "sts:AssumeRole"
-      Effect = "Allow"
-      Principal = {
-        Service = "glue.amazonaws.com"
-      }
-    }]
-  })
-}
-
-resource "aws_iam_role" "lambda_role" {
-  name = "lambda-job-role"
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Action = "sts:AssumeRole"
-      Effect = "Allow"
-      Principal = {
-        Service = "lambda.amazonaws.com"
-      }
-    }]
-  })
-}
-
-
-# Attach Glue S3 Access Policy to the Role
-resource "aws_iam_role_policy_attachment" "glue_s3_attachment" {
-  role       = aws_iam_role.glue_etl_role.name
+# Attach IAM Policy to Glue Role
+resource "aws_iam_role_policy_attachment" "glue_service_role_attachment" {
+  role       = aws_iam_role.glue_role.name
   policy_arn = aws_iam_policy.glue_s3_access.arn
 }
 
-# Attach AWS Managed Glue Service Role Policy for Additional Permissions
-resource "aws_iam_role_policy_attachment" "glue_service_role_attachment" {
-  role       = aws_iam_role.glue_etl_role.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole"
+resource "aws_iam_role" "lambda_role" {
+  name = var.lambda_role_name
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": { "Service": "lambda.amazonaws.com" },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
+}
+
+# Lambda IAM Policy
+resource "aws_iam_policy" "lambda_s3_access" {
+  name        = "lambda_s3_access"
+  description = "Allows Lambda to access S3 and invoke Glue"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = ["s3:GetObject", "s3:ListBucket"]
+        Resource = [
+          "${var.raw_data_bucket_arn}",
+          "${var.raw_data_bucket_arn}/*"
+        ]
+      },
+      {
+        Effect   = "Allow"
+        Action   = ["glue:StartJobRun"]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+# Attach IAM Policy to Lambda Role
+resource "aws_iam_role_policy_attachment" "lambda_service_role_attachment" {
+  role       = aws_iam_role.lambda_role.name
+  policy_arn = aws_iam_policy.lambda_s3_access.arn
 }

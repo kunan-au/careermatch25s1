@@ -1,15 +1,8 @@
-# **Ensure RDS is Created Before Running ETL**
-data "aws_rds_cluster" "rds" {
-  db_cluster_identifier = module.rds_private.name
+data "aws_db_instance" "rds" {
+  db_instance_identifier = module.rds_private.rds_instance_identifier  # ✅ Correct reference
 }
 
-# **Trigger AWS Glue Job**
 resource "null_resource" "run_glue_etl" {
-  provisioner "local-exec" {
-    command = <<EOT
-      aws glue start-job-run --job-name ${module.glue.glue_job_name}
-    EOT
-  }
-
-  depends_on = [data.aws_rds_cluster.rds]
+  depends_on = [module.rds_private.rds_instance_identifier]  # ✅ Correctly references RDS instance
 }
+

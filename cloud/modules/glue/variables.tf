@@ -54,3 +54,8 @@ variable "environment" {
   description = "Environment for tagging (e.g., dev, staging, prod)"
   type        = string
 }
+
+variable "glue_role_arn" {
+  description = "IAM Role for Glue"
+  type        = string
+}

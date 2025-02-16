@@ -184,7 +184,11 @@ module "rds_public" {
 }
 
 module "iam" {
-  source = "./modules/iam"
+  source               = "./modules/iam"
+  glue_role_name       = "career-match-glue-role"
+  lambda_role_name     = "career-match-lambda-role"
+  raw_data_bucket_arn  = aws_s3_bucket.raw_data_bucket.arn
+  curated_data_bucket_arn = aws_s3_bucket.curated_data_bucket.arn
 }
 
 # **Deploy AWS Glue**
@@ -200,6 +204,7 @@ module "glue" {
   rds_username     = var.username
   rds_password     = random_password.private_rds_password.result
   rds_database     = var.db_name
+  glue_role_arn    = module.iam.glue_etl_role_arn
   environment      = var.environment
 }
 
@@ -209,9 +214,16 @@ module "lambda" {
   lambda_function_name  = "trigger-career-match-glue-etl"
   lambda_handler        = "lambda_function.lambda_handler"
   lambda_runtime        = "python3.9"
+  lambda_role_name      = "career-match-lambda-role"  # ✅ Fix here
   lambda_role_arn       = module.iam.lambda_role_arn
   lambda_s3_bucket      = aws_s3_bucket.sandbox_analytics_bucket.bucket
   lambda_s3_key         = "lambda_trigger_glue.zip"
   glue_job_name         = module.glue.glue_job_name
-  unique_suffix         = random_id.unique_suffix.hex  # ✅ Add this
+  glue_role_arn         = module.iam.glue_etl_role_arn
+  glue_script_path      = "scripts/glue_etl.py"
+  s3_bucket_name        = aws_s3_bucket.sandbox_analytics_bucket.bucket
+  s3_raw_data_path      = aws_s3_bucket.raw_data_bucket.bucket
+  s3_curated_path       = aws_s3_bucket.curated_data_bucket.bucket
+  s3_temp_path          = aws_s3_bucket.transient_zone_bucket.bucket
+  unique_suffix         = random_id.unique_suffix.hex
 }
