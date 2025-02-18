@@ -1,169 +1,41 @@
-# Career Match
+![act-logo](https://raw.githubusercontent.com/wiki/nektos/act/img/logo-150.png)
 
-## Description
+# Overview [![push](https://github.com/nektos/act/workflows/push/badge.svg?branch=master&event=push)](https://github.com/nektos/act/actions) [![Join the chat at https://gitter.im/nektos/act](https://badges.gitter.im/nektos/act.svg)](https://gitter.im/nektos/act?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![Go Report Card](https://goreportcard.com/badge/github.com/nektos/act)](https://goreportcard.com/report/github.com/nektos/act) [![awesome-runners](https://img.shields.io/badge/listed%20on-awesome--runners-blue.svg)](https://github.com/jonico/awesome-runners)
 
-**Career Match** is a revolutionary job search information service platform that matches job seekers based on their talents and preferences. Users only need to build a profile, including their CV, salary expectations, and career goals, to receive job listings tailored to their skills and aspirations.
+> "Think globally, `act` locally"
 
-From a technological perspective, Career Match utilizes **machine learning** and **natural language processing (NLP)** to filter job applicants' information by keywords, ensuring the best candidates are matched with open positions.
+Run your [GitHub Actions](https://developer.github.com/actions/) locally! Why would you want to do this? Two reasons:
 
-This platform is built on **AWS Cloud** infrastructure, incorporating an **end-to-end data pipeline**, **data warehouse**, and **data lake** to efficiently store, process, and analyze job and applicant data. The system is designed for scalability and high availability, ensuring seamless job matching and recommendation processes.
+- **Fast Feedback** - Rather than having to commit/push every time you want to test out the changes you are making to your `.github/workflows/` files (or for any changes to embedded GitHub actions), you can use `act` to run the actions locally. The [environment variables](https://help.github.com/en/actions/configuring-and-managing-workflows/using-environment-variables#default-environment-variables) and [filesystem](https://help.github.com/en/actions/reference/virtual-environments-for-github-hosted-runners#filesystems-on-github-hosted-runners) are all configured to match what GitHub provides.
+- **Local Task Runner** - I love [make](<https://en.wikipedia.org/wiki/Make_(software)>). However, I also hate repeating myself. With `act`, you can use the GitHub Actions defined in your `.github/workflows/` to replace your `Makefile`!
 
-## Presentation & Landing Page
+> [!TIP]
+> **Now Manage and Run Act Directly From VS Code!**<br/>
+> Check out the [GitHub Local Actions](https://sanjulaganepola.github.io/github-local-actions-docs/) Visual Studio Code extension which allows you to leverage the power of `act` to run and test workflows locally without leaving your editor.
 
-- View the official **Canva slides**: [Presentation](https://www.canva.com/design/DAGeslzAspM/7_6c2asRIXdfvrKGOuL54w/edit?utm_content=DAGeslzAspM&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton).
-- Explore the **Landing Page**: [Career Match Website](https://kendallan27.my.canva.site/)
+# How Does It Work?
 
-## Project Startup Guide
+When you run `act` it reads in your GitHub Actions from `.github/workflows/` and determines the set of actions that need to be run. It uses the Docker API to either pull or build the necessary images, as defined in your workflow files and finally determines the execution path based on the dependencies that were defined. Once it has the execution path, it then uses the Docker API to run containers for each action based on the images prepared earlier. The [environment variables](https://help.github.com/en/actions/configuring-and-managing-workflows/using-environment-variables#default-environment-variables) and [filesystem](https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners#file-systems) are all configured to match what GitHub provides.
 
-### A. Initial Setup & Starting the Project
+Let's see it in action with a [sample repo](https://github.com/cplee/github-actions-demo)!
 
-#### 1. Clone the repository
+![Demo](https://raw.githubusercontent.com/wiki/nektos/act/quickstart/act-quickstart-2.gif)
 
-```bash
- git clone https://github.com/kunan-au/careermatch25s1.git
-```
+# Act User Guide
 
-#### 2. Open the project in VS Code
+Please look at the [act user guide](https://nektosact.com) for more documentation.
 
-```bash
- cd career-match-vite-fastapi
- code .
-```
+# Support
 
-#### 3. Start Docker
-Ensure **Docker Desktop** is running.
+Need help? Ask on [Gitter](https://gitter.im/nektos/act)!
 
-#### 4. Set up and start the backend
+# Contributing
 
-```bash
- cd server
- cp .env.example .env
- docker network create app_main
- docker-compose up -d --build
-```
+Want to contribute to act? Awesome! Check out the [contributing guidelines](CONTRIBUTING.md) to get involved.
 
-Once complete, you should see three new containers in Docker: **app**, **app_db**, and **app_redis**.
+## Manually building from source
 
-#### 5. Start all three containers manually in Docker if necessary.
-
-> **Windows users:** If the `app` container does not start, refer to [Issues & Troubleshooting](#d-issues-you-may-face).
-
-#### 6. Set up and start the frontend
-
-```bash
- cd client
- npm install  # Install dependencies
- npm run dev  # Start the development server
-```
-
-You should see output similar to:
-
-```
- career-match@0.0.0 dev
- vite
- ➜ Local:   http://localhost:5173/
- ➜ Network: use --host to expose
- ➜ Press h + enter to show help
-```
-
-#### 7. Open the project in a browser
-Copy and paste `http://localhost:5173/` into your browser to access the platform.
-
----
-
-### B. Running the Project (After Setup)
-
-1. Open the `career-match-vite-fastapi` folder in **VS Code**.
-2. Open **Docker Desktop** and start all three containers.
-3. Open a **new terminal** in VS Code and start the frontend:
-
-```bash
- cd client
- npm install  
- npm run dev
-```
-
-4. Open `http://localhost:5173/` in a browser.
-
----
-
-### C. Navigating the Interface
-
-#### 1. **Login is required to access features**
-Sign up first, then log in.
-
-**Example credentials:**
-
-- **Email:** `user@example.com`
-- **Password:** `CareerMatch1234!`
-
-#### 2. **Switching pages**
-Routes are defined in `client/src/router.tsx`.
-For example, to view the user profile page:
-
-```
- http://localhost:5173/profile
-```
-
-#### 3. **Shutting down the project**
-Press **Ctrl + C** in the terminal:
-
-```
- ^C ^C Terminate batch job (Y/N)? 
-```
-
-Press `y` to confirm.
-
----
-
-### D. Issues & Troubleshooting
-
-#### 1. **Containers fail to start on Windows**
-
-Try the following steps:
-
-1. Delete the `career-match-vite-fastapi` folder.
-2. Open **Command Prompt** and navigate to your desired directory.
-3. Clone the project with the correct line ending settings:
-
-```bash
- git config --global core.autocrlf input 
- git clone https://gitlab.com/yupeiyuan0108/career-match-vite-fastapi.git
-```
-
-4. Open **Docker Desktop**.
-5. Open **VS Code** and redo the **first setup**.
-6. Check **Docker** to verify all containers are running.
-
-#### 2. **npm installation issues**
-Check if you have permission to access the `client` folder.
-
-#### 3. **Login/Signup fails**
-If you see this error:
-
-```
-Something went wrong connecting to the server. Please try again later.
-```
-
-Try applying database migrations:
-
-```bash
- cd server
- docker-compose run app alembic upgrade head
- docker-compose down
- docker-compose up -d --build
-```
-
-Then restart the frontend:
-
-```bash
- cd client
- npm run dev
-```
-
----
-
-### E. Additional Information
-
-- [Backend Readme](server/README.md)
-- [Frontend Readme](client/README.md)
+- Install Go tools 1.20+ - (<https://golang.org/doc/install>)
+- Clone this repo `git clone git@github.com:nektos/act.git`
+- Run unit tests with `make test`
+- Build and install: `make install`
