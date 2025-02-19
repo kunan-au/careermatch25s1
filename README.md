@@ -109,7 +109,7 @@ For example, to view the user profile page:
 Press **Ctrl + C** in the terminal:
 
 ```
- ^C ^C Terminate batch job (Y/N)? 
+^C Terminate batch job (Y/N)? 
 ```
 
 Press `y` to confirm.
