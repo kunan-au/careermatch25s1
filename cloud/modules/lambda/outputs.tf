@@ -17,8 +17,3 @@ output "lambda_s3_key" {
   description = "S3 key (path) for the Lambda ZIP file"
   value       = "lambda_trigger_glue.zip"
 }
-
-output "lambda_role_arn" {
-  description = "IAM Role ARN for the Lambda function"
-  value       = aws_iam_role.lambda_role.arn
-}

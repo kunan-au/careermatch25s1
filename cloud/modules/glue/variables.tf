@@ -1,61 +1,66 @@
-variable "glue_script_name" {
-  description = "Name of the Glue job (e.g., glue-etl-to-rds)"
+variable "glue_job_name" {
   type        = string
+  default     = "glue-etl-to-rds"
+  description = "Logical name for the Glue job"
+}
+
+variable "glue_script_name" {
+  type        = string
+  description = "Name of the script used for the Glue job"
 }
 
 variable "glue_script_path" {
-  description = "Path to the script in the S3 bucket (e.g., scripts/glue_etl.py)"
   type        = string
+  description = "S3 key for the ETL script"
 }
 
 variable "s3_bucket_name" {
-  description = "Name of the S3 bucket where the Glue script is stored"
   type        = string
+  description = "S3 bucket where the Glue script is stored"
 }
 
 variable "s3_raw_data_path" {
-  description = "S3 path where raw data is stored"
   type        = string
+  description = "S3 path where raw data is stored"
 }
 
 variable "s3_curated_path" {
-  description = "S3 bucket path for curated data"
   type        = string
+  description = "S3 path where curated data is stored"
 }
 
-
 variable "s3_temp_path" {
-  description = "S3 path for Glue temporary storage"
   type        = string
+  description = "S3 path for Glue temporary storage"
   default     = "temp/"
 }
 
 variable "rds_endpoint" {
-  description = "RDS database endpoint"
   type        = string
+  description = "RDS endpoint for the Glue script"
 }
 
 variable "rds_username" {
-  description = "RDS database username"
   type        = string
+  description = "RDS username for the Glue script"
 }
 
 variable "rds_password" {
-  description = "RDS database password"
   type        = string
+  description = "RDS password for the Glue script"
 }
 
 variable "rds_database" {
-  description = "RDS database name"
   type        = string
-}
-
-variable "environment" {
-  description = "Environment for tagging (e.g., dev, staging, prod)"
-  type        = string
+  description = "RDS DB name"
 }
 
 variable "glue_role_arn" {
-  description = "IAM Role for Glue"
   type        = string
+  description = "IAM role ARN used by Glue"
+}
+
+variable "environment" {
+  type        = string
+  description = "Environment (e.g. dev, staging, prod)"
 }

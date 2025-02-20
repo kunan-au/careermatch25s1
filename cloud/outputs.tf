@@ -48,10 +48,12 @@ output "glue_job_name" {
 }
 
 # Lambda Outputs
+/*
 output "lambda_function_name" {
   description = "Lambda function name"
   value       = module.lambda.lambda_function_name
 }
+*/
 
 # Password Files (Local)
 output "public_rds_password_file" {

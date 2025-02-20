@@ -134,28 +134,20 @@ variable "glue_script_path" {
   default     = "scripts/glue_etl.py"
 }
 
-variable "s3_bucket_name" {
-  description = "S3 bucket where the Glue script is stored"
-  type        = string
-}
-
-variable "s3_raw_data_path" {
-  description = "S3 path where raw data is stored"
-  type        = string
-}
-
 variable "s3_temp_path" {
   description = "S3 path for Glue temporary storage"
   type        = string
   default     = "temp/"
 }
 
-variable "username" {
-  description = "Database username"
+variable "existing_glue_role_arn" {
   type        = string
+  description = "ARN of the existing Glue service role"
+  default     = "arn:aws:iam::423623841608:role/service-role/AWSGlueServiceRole-kun"
 }
 
-variable "glue_job_name" {
-  description = "AWS Glue Job Name"
+variable "existing_lambda_role_arn" {
   type        = string
+  description = "Use an existing Lambda execution role"
+  default     = "arn:aws:iam::423623841608:role/some-existing-lambda-role"
 }
