@@ -44,7 +44,8 @@ variable "core_instance_type" {
   default     = "m5.xlarge"
 }
 
+# Updated to default = 1
 variable "core_instance_count" {
   description = "Number of core nodes"
-  default     = 2
+  default     = 1
 }

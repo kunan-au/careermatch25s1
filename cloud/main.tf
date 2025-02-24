@@ -256,3 +256,47 @@ module "lambda" {
 }
 
 */
+
+#################################
+# EMR Cluster
+#################################
+resource "aws_emr_cluster" "emr_cluster" {
+  name          = var.cluster_name
+  release_label = var.release_label
+  applications  = var.applications
+
+  log_uri = "s3://${aws_s3_bucket.sandbox_analytics_bucket.bucket}/emr-logs/"
+  service_role = var.emr_service_role_arn
+
+  ec2_attributes {
+    key_name         = var.key_name
+    subnet_id        = module.vpc.private_subnet_ids[0]
+    instance_profile = var.emr_instance_profile_arn
+
+    emr_managed_master_security_group = module.vpc.private_security_group_id
+    emr_managed_slave_security_group  = module.vpc.private_security_group_id
+  }
+
+  master_instance_group {
+    instance_type  = var.master_instance_type
+    instance_count = 1
+  }
+
+  core_instance_group {
+    instance_type  = var.core_instance_type
+    instance_count = 1
+  }
+
+  # Updated file path: points to the file within the modules/emr folder.
+  configurations_json = file("${path.module}/modules/emr/emr-config.json")
+  
+  bootstrap_action {
+    name = "bootstrap-script"
+    path = "s3://${aws_s3_bucket.sandbox_analytics_bucket.bucket}/bootstrap/bootstrap.sh"
+  }
+
+  tags = {
+    Environment = var.environment
+    Project     = "CareerMatch-ETL"
+  }
+}

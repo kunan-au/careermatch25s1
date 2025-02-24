@@ -34,23 +34,22 @@ import pandas as pd
 import numpy as np
 import spacy
 from word2number import w2n
+import nltk
 
 # --------------------------------------------------
 # Step 0: Ensure All NLTK Data is Downloaded
 # --------------------------------------------------
-import nltk
-
 def ensure_nltk_resources():
     """
     Forces download of all NLTK data. This is large, but it reliably
-    addresses the 'punkt_tab' missing error in some environments.
+    addresses missing resource errors.
     """
-    nltk.download('all')  # Comment this out if your environment already has the data
+    nltk.download('all')  # Comment out if already downloaded
 
 ensure_nltk_resources()
 
 from nltk.corpus import stopwords
-from nltk.tokenize import word_tokenize
+from nltk.tokenize import word_tokenize, sent_tokenize
 
 # Configure logging
 logging.basicConfig(
@@ -59,33 +58,9 @@ logging.basicConfig(
 )
 
 # --------------------------------------------------
-# 1. Load Data
-# --------------------------------------------------
-def load_resume_data(file_path: str) -> pd.DataFrame:
-    """
-    Loads the CSV file containing resume data.
-    - Tries utf-8 and falls back to ISO-8859-1 if needed.
-    - Fills missing values with 'Unknown'.
-    """
-    logging.info(f"Loading data from {file_path}")
-    try:
-        df = pd.read_csv(file_path, encoding='utf-8')
-    except UnicodeDecodeError:
-        logging.warning("UTF-8 decoding failed. Trying ISO-8859-1 encoding.")
-        df = pd.read_csv(file_path, encoding='ISO-8859-1')
-
-    df.fillna("Unknown", inplace=True)
-    logging.info(f"Loaded dataset with {len(df)} rows and {len(df.columns)} columns.")
-    return df
-
-# --------------------------------------------------
-# 2. Data Cleaning
+# 1. Data Cleaning Functions
 # --------------------------------------------------
 def detect_outliers_by_length(df: pd.DataFrame, text_column: str, multiplier: float = 1.5) -> pd.DataFrame:
-    """
-    Detect outliers based on the IQR (interquartile range) of text length
-    in 'text_column'. Returns a DataFrame containing only the outlier rows.
-    """
     logging.info(f"Detecting outliers by text length in '{text_column}'...")
     lengths = df[text_column].apply(lambda x: len(str(x)))
     q1, q3 = np.percentile(lengths, [25, 75])
@@ -97,40 +72,26 @@ def detect_outliers_by_length(df: pd.DataFrame, text_column: str, multiplier: fl
     return outliers
 
 def clean_data(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Standard data cleaning steps:
-    - Convert 'Category' to uppercase (if it exists).
-    - Drop duplicates.
-    """
-    logging.info("Cleaning dataset (standardizing 'Category', removing duplicates).")
+    logging.info("Cleaning dataset: standardizing 'Category' and removing duplicates.")
     if 'Category' in df.columns:
         df['Category'] = df['Category'].astype(str).str.strip().str.upper()
-
     before = len(df)
     df.drop_duplicates(inplace=True)
     after = len(df)
-    logging.info(f"Removed {before - after} duplicates; new row count is {len(df)}.")
+    logging.info(f"Removed {before - after} duplicate rows; remaining rows: {after}.")
     return df
 
 # --------------------------------------------------
-# 3. Data Transformation
+# 2. Data Transformation Functions
 # --------------------------------------------------
-
-# 3.1 Convert HTML to Plain Text
 def extract_plain_text(html_content: Union[str, float]) -> str:
-    """
-    Strips HTML tags and decodes entities. If content is invalid, returns 'Unknown'.
-    """
     if pd.isna(html_content) or html_content == "Unknown":
         return "Unknown"
+    # Remove HTML tags and unescape entities
     plain_text = re.sub(r'<[^<]+?>', '', html.unescape(str(html_content)))
     return plain_text.strip()
 
-# 3.2 Extract Basic Fields: Phone, Email, LinkedIn
 def extract_phone_number(text: str) -> str:
-    """
-    Captures phone patterns including optional country code (+xx) and extension (x123).
-    """
     if text == "Unknown" or pd.isna(text):
         return "Unknown"
     phone_pattern = re.compile(
@@ -140,9 +101,6 @@ def extract_phone_number(text: str) -> str:
     return match.group(0).strip() if match else "Unknown"
 
 def extract_email(text: str) -> str:
-    """
-    Finds an email address using a straightforward regex.
-    """
     if text == "Unknown" or pd.isna(text):
         return "Unknown"
     email_pattern = re.compile(r'[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+')
@@ -150,51 +108,40 @@ def extract_email(text: str) -> str:
     return match.group(0).strip() if match else "Unknown"
 
 def extract_linkedin_url(text: str) -> str:
-    """
-    Searches for a LinkedIn URL in the text.
-    """
     if text == "Unknown" or pd.isna(text):
         return "Unknown"
     pattern = re.compile(r'(https?://(www\.)?linkedin\.com/[^\s]+)')
     match = pattern.search(text)
     return match.group(0).strip() if match else "Unknown"
 
-# 3.3 Dictionary-Based Extractions: Skills, Degrees, Languages, etc.
+# Dictionary-based extraction lists
 SKILL_KEYWORDS = [
     "python", "sql", "excel", "machine learning", "nlp",
     "aws", "azure", "java", "c++", "tableau", "power bi"
 ]
-
 SOFT_SKILLS = [
     "communication", "teamwork", "leadership", "problem solving",
     "time management", "adaptability", "creativity"
 ]
-
 PROGRAMMING_LANGUAGES = [
     "python", "java", "c++", "c#", "javascript", "ruby", "go", "php"
 ]
-
 FRAMEWORKS = [
     "django", "flask", "spring", "react", "angular", "vue", "node.js"
 ]
-
 DATABASES = [
     "mysql", "postgresql", "mongodb", "oracle", "sql server", "sqlite"
 ]
-
 CLOUD_PROVIDERS = [
     "aws", "azure", "google cloud", "gcp", "ibm cloud"
 ]
-
 LANGUAGES_SPOKEN = [
     "english", "spanish", "french", "german", "mandarin", "hindi", "arabic", "portuguese"
 ]
-
 DEGREES = [
     "bachelor", "master", "phd", "mba", "b.sc", "m.sc",
     "btech", "mtech", "ba", "ma"
 ]
-
 CERTIFICATIONS = [
     "pmp",
     "cfa",
@@ -204,10 +151,6 @@ CERTIFICATIONS = [
 ]
 
 def find_keywords(text: str, keywords_list: List[str]) -> str:
-    """
-    Helper function for case-insensitive substring searches. Returns
-    a '; ' joined list of matches or 'Unknown' if none found.
-    """
     if text == "Unknown" or pd.isna(text):
         return "Unknown"
     found = []
@@ -218,21 +161,12 @@ def find_keywords(text: str, keywords_list: List[str]) -> str:
     return "; ".join(sorted(set(found))) if found else "Unknown"
 
 def find_degrees(text: str) -> str:
-    """
-    Looks for references to known degrees (Bachelor, Master, PhD, etc.).
-    """
     return find_keywords(text, DEGREES)
 
 def find_spoken_languages(text: str) -> str:
-    """
-    Detect references to known spoken languages.
-    """
     return find_keywords(text, LANGUAGES_SPOKEN)
 
 def find_certifications(text: str) -> str:
-    """
-    Detect references to known certifications in the text.
-    """
     if text == "Unknown" or pd.isna(text):
         return "Unknown"
     found = []
@@ -242,14 +176,9 @@ def find_certifications(text: str) -> str:
             found.append(cert)
     return "; ".join(sorted(set(found))) if found else "Unknown"
 
-# 3.4 Named Entity Recognition (spaCy)
 def spacy_extract_entities(text: str, nlp_obj) -> Dict[str, List[str]]:
-    """
-    Extracts PERSON, ORG, GPE, LOC using spaCy, returning a dictionary of sets.
-    """
     if text == "Unknown" or pd.isna(text):
         return {"PERSON": [], "ORG": [], "GPE": [], "LOC": []}
-
     doc = nlp_obj(text)
     entities = {"PERSON": set(), "ORG": set(), "GPE": set(), "LOC": set()}
     for ent in doc.ents:
@@ -257,7 +186,6 @@ def spacy_extract_entities(text: str, nlp_obj) -> Dict[str, List[str]]:
             entities[ent.label_].add(ent.text.strip())
     return {k: sorted(v) for k, v in entities.items()}
 
-# 3.5 Identify University
 universities_list = [
     "harvard university",
     "stanford university",
@@ -268,28 +196,18 @@ universities_list = [
 ]
 
 def identify_university(orgs_str: str) -> str:
-    """
-    If any recognized ORG entity matches a known university, return it.
-    Otherwise return 'Unknown'.
-    """
     if not orgs_str or orgs_str == "Unknown":
         return "Unknown"
     orgs = [o.strip().lower() for o in orgs_str.split(";")]
     for org in orgs:
         for uni in universities_list:
             if uni in org:
-                return uni.title()  # e.g., "Harvard University"
+                return uni.title()
     return "Unknown"
 
-# 3.6 Extract Years of Experience
 def extract_years_of_experience(text: str) -> Union[int, str]:
-    """
-    Uses a regex to find references like 'X years of experience'.
-    Converts textual numbers (one, two, etc.) to digits. Returns the max found.
-    """
     if text == "Unknown" or pd.isna(text):
         return "Unknown"
-
     pattern = re.compile(
         r'(\d+|one|two|three|four|five|six|seven|eight|nine|ten)\s+years?\s+of\s+experience',
         re.IGNORECASE
@@ -297,7 +215,6 @@ def extract_years_of_experience(text: str) -> Union[int, str]:
     matches = pattern.findall(text)
     if not matches:
         return "Unknown"
-
     experiences = []
     for match in matches:
         try:
@@ -305,34 +222,20 @@ def extract_years_of_experience(text: str) -> Union[int, str]:
                 experiences.append(int(match))
             else:
                 experiences.append(w2n.word_to_num(match))
-        except:
+        except Exception as e:
             continue
     return max(experiences) if experiences else "Unknown"
 
-# 3.7 Extract Education/Experience Sections
 def extract_section(text: str, section_name: str) -> str:
-    """
-    Attempts to capture an entire section from a heading like 'EDUCATION'
-    up to the next all-caps heading or the end of the document.
-    """
     if text == "Unknown" or pd.isna(text):
         return "Unknown"
-
     pattern = rf'{section_name}[\s\S]*?(?=[A-Z]{{2,}}[\s\n]|$)'
     match = re.search(pattern, text, re.IGNORECASE)
     return match.group(0).strip() if match else "Unknown"
 
-# 3.8 Text Preprocessing
 def preprocess_text(text: str) -> str:
-    """
-    - Lowercases
-    - Tokenizes
-    - Removes non-alpha tokens and English stopwords
-    - Returns a space-joined string
-    """
     if text == "Unknown" or pd.isna(text):
         return "Unknown"
-
     text = text.lower()
     tokens = word_tokenize(text)
     stop_words = set(stopwords.words('english'))
@@ -340,54 +243,43 @@ def preprocess_text(text: str) -> str:
     return " ".join(tokens)
 
 # --------------------------------------------------
-# 4. ETL Pipeline
+# 3. Enhanced ETL Pipeline Processing Function
 # --------------------------------------------------
-def etl_pipeline(
-    file_path: str,
-    output_path: str = "Cleaned_Resume.csv",
-    remove_outliers: bool = False
-) -> None:
+def process_df(df: pd.DataFrame, remove_outliers: bool = False) -> pd.DataFrame:
     """
-    Orchestrates the end-to-end ETL process:
-      1) Load data
-      2) Clean (duplicates, outliers)
-      3) Transform (HTML -> text, extract phone/email/etc.)
-      4) spaCy NER
-      5) Save the final dataset
+    Processes the input DataFrame containing resume data:
+      - Cleans data (duplicates, outliers)
+      - Transforms text (HTML-to-plain text, extractions, NER, etc.)
+      - Enriches data with additional metrics and performs basic validations
     """
-    logging.info("----- Starting ETL Pipeline -----")
-
-    # 1. Load
-    df = load_resume_data(file_path)
-
-    # 2. Clean
+    # Clean data and remove duplicates
     df = clean_data(df)
-
-    # 2.1 Detect (optionally remove) outliers by length
+    
+    # Remove outliers based on resume text length if applicable
     if 'Resume_str' in df.columns:
         outliers = detect_outliers_by_length(df, 'Resume_str')
         if remove_outliers and not outliers.empty:
             df = df[~df.index.isin(outliers.index)]
-            logging.info(f"Outliers removed. New shape: {df.shape}")
-
-    # 3. Transform
-    # 3.1 Convert HTML -> plain text
+            logging.info(f"Outliers removed; new shape: {df.shape}")
+    
+    # Convert HTML to plain text or fallback to the raw string column
     if 'Resume_html' in df.columns:
         df['Resume_text'] = df['Resume_html'].apply(extract_plain_text)
+    elif 'Resume_str' in df.columns:
+        df.rename(columns={'Resume_str': 'Resume_text'}, inplace=True)
     else:
-        # fallback if only 'Resume_str' is present
-        if 'Resume_str' in df.columns:
-            df.rename(columns={'Resume_str': 'Resume_text'}, inplace=True)
-        else:
-            logging.warning("No 'Resume_html' or 'Resume_str' found; defaulting 'Resume_text' to 'Unknown'.")
-            df['Resume_text'] = "Unknown"
-
-    # 3.2 Basic extractions
+        logging.warning("No 'Resume_html' or 'Resume_str' found; setting 'Resume_text' to 'Unknown'.")
+        df['Resume_text'] = "Unknown"
+    
+    # Remove extra whitespace in resume text
+    df['Resume_text'] = df['Resume_text'].str.strip().replace(r'\s+', ' ', regex=True)
+    
+    # Basic extractions: Phone, Email, LinkedIn URL
     df['Phone_Number'] = df['Resume_text'].apply(extract_phone_number)
     df['Email_Address'] = df['Resume_text'].apply(extract_email)
     df['LinkedIn_URL'] = df['Resume_text'].apply(extract_linkedin_url)
-
-    # 3.3 Additional dictionary-based columns
+    
+    # Dictionary-based extractions
     df['Soft_Skills'] = df['Resume_text'].apply(lambda x: find_keywords(x, SOFT_SKILLS))
     df['Hard_Skills'] = df['Resume_text'].apply(lambda x: find_keywords(x, SKILL_KEYWORDS))
     df['Programming_Languages'] = df['Resume_text'].apply(lambda x: find_keywords(x, PROGRAMMING_LANGUAGES))
@@ -397,31 +289,28 @@ def etl_pipeline(
     df['Degrees'] = df['Resume_text'].apply(find_degrees)
     df['Languages_Spoken'] = df['Resume_text'].apply(find_spoken_languages)
     df['Certifications'] = df['Resume_text'].apply(find_certifications)
-
-    # 3.4 Preprocess text
+    
+    # Additional text preprocessing and enrichment
     df['Clean_Tokens'] = df['Resume_text'].apply(preprocess_text)
-
-    # 3.5 spaCy NER
+    df['Word_Count'] = df['Resume_text'].apply(lambda x: len(x.split()) if x != "Unknown" else 0)
+    df['Sentence_Count'] = df['Resume_text'].apply(lambda x: len(sent_tokenize(x)) if x != "Unknown" else 0)
+    df['Cleaned_Token_Count'] = df['Clean_Tokens'].apply(lambda x: len(x.split()) if x != "Unknown" else 0)
+    
+    # spaCy Named Entity Recognition
     logging.info("Loading spaCy model for NER...")
     nlp = spacy.load("en_core_web_sm")
     df['spacy_entities'] = df['Resume_text'].apply(lambda x: spacy_extract_entities(x, nlp))
     df['Persons'] = df['spacy_entities'].apply(lambda ents: "; ".join(ents['PERSON']))
     df['Organizations'] = df['spacy_entities'].apply(lambda ents: "; ".join(ents['ORG']))
-    df['Locations'] = df['spacy_entities'].apply(
-        lambda ents: "; ".join(sorted(set(ents['GPE'] + ents['LOC'])))
-    )
-
-    # 3.6 Identify University
+    df['Locations'] = df['spacy_entities'].apply(lambda ents: "; ".join(sorted(set(ents['GPE'] + ents['LOC']))))
+    
+    # Identify university, years of experience, and extract sections
     df['University'] = df['Organizations'].apply(identify_university)
-
-    # 3.7 Extract years of experience
     df['Years_of_Experience'] = df['Resume_text'].apply(extract_years_of_experience)
-
-    # 3.8 Extract Education/Experience sections
     df['Education_Section'] = df['Resume_text'].apply(lambda x: extract_section(x, "EDUCATION"))
     df['Experience_Section'] = df['Resume_text'].apply(lambda x: extract_section(x, "EXPERIENCE"))
-
-    # 3.9 Word Count Normalization
+    
+    # Normalize word count if an external Word_Count exists (optional)
     if 'Word_Count' in df.columns:
         max_wc = df['Word_Count'].max()
         if pd.notna(max_wc) and max_wc > 0:
@@ -430,18 +319,87 @@ def etl_pipeline(
             df['Normalized_Word_Count'] = "Unknown"
     else:
         df['Normalized_Word_Count'] = "Unknown"
-
-    # 4. Save final
-    df.to_csv(output_path, index=False, encoding='utf-8')
-    logging.info(f"ETL complete. Final dataset saved to {output_path} with {len(df)} rows.")
-
-    logging.info("----- ETL Pipeline Finished Successfully -----")
-
+    
+    # Basic validation: warn if critical fields remain unknown
+    missing_emails = df[df['Email_Address'] == "Unknown"]
+    missing_phones = df[df['Phone_Number'] == "Unknown"]
+    if not missing_emails.empty:
+        logging.warning(f"{len(missing_emails)} rows have unknown email addresses.")
+    if not missing_phones.empty:
+        logging.warning(f"{len(missing_phones)} rows have unknown phone numbers.")
+    
+    return df
 
 # --------------------------------------------------
-# Script Entry Point
+# 4. Main Routine: Read from Database & Write to Glue Catalog/S3
 # --------------------------------------------------
 if __name__ == "__main__":
-    input_csv_path = "/content/Resume.csv"         # Change as needed
-    output_csv_path = "/content/Cleaned_Resume.csv"  # Change as needed
-    etl_pipeline(file_path=input_csv_path, output_path=output_csv_path, remove_outliers=False)
+    from pyspark.context import SparkContext
+    from awsglue.context import GlueContext
+    from awsglue.dynamicframe import DynamicFrame
+
+    # ----------------------------
+    # Manual Input Variables (update these)
+    # ----------------------------
+    jdbc_url = "jdbc:mysql://your-db-host:3306/your_db_name"  # Your DB host and name
+    user = "your_username"           # Your database username
+    password = "your_password"       # Your database password
+    table_name = "your_resume_table" # Your table name containing resume data
+
+    glue_database_name = "your_glue_database"  # Your Glue Catalog database name
+    glue_table_name = "cleaned_resume"         # Target Glue table name
+    output_s3_path = "s3://your-bucket/path/to/output/"  # S3 bucket/path for output
+
+    # ----------------------------
+    # Initialize Glue Context and Spark Session
+    # ----------------------------
+    glueContext = GlueContext(SparkContext.getOrCreate())
+    spark = glueContext.spark_session
+
+    # ----------------------------
+    # Read from Database (RDS) using JDBC
+    # ----------------------------
+    logging.info("Reading resume data from the database (RDS)...")
+    jdbc_df = spark.read \
+        .format("jdbc") \
+        .option("url", jdbc_url) \
+        .option("dbtable", table_name) \
+        .option("user", user) \
+        .option("password", password) \
+        .load()
+
+    # Convert Spark DataFrame to Pandas DataFrame for ETL processing
+    df_pd = jdbc_df.toPandas()
+
+    # ----------------------------
+    # Process Data via ETL Pipeline (with enhanced transformations)
+    # ----------------------------
+    logging.info("Processing resume data through the enhanced ETL pipeline...")
+    processed_df = process_df(df_pd, remove_outliers=False)
+
+    # Convert the processed Pandas DataFrame back to a Spark DataFrame
+    logging.info("Converting processed data back to Spark DataFrame...")
+    processed_spark_df = spark.createDataFrame(processed_df)
+
+    # Convert Spark DataFrame to a Glue DynamicFrame
+    logging.info("Converting Spark DataFrame to Glue DynamicFrame...")
+    processed_dynamic_frame = DynamicFrame.fromDF(processed_spark_df, glueContext, "processed_dynamic_frame")
+
+    # ----------------------------
+    # Write to S3 and Update Glue Data Catalog
+    # ----------------------------
+    logging.info("Writing processed data to S3 and updating Glue Catalog...")
+    datasink = glueContext.getSink(
+        connection_type="s3",
+        path=output_s3_path,
+        enableUpdateCatalog=True,
+        partitionKeys=[]
+    )
+    datasink.setCatalogInfo(
+        catalogDatabase=glue_database_name,
+        catalogTableName=glue_table_name
+    )
+    datasink.setFormat("glueparquet")
+    datasink.writeFrame(processed_dynamic_frame)
+
+    logging.info("Enhanced ETL pipeline finished successfully.")

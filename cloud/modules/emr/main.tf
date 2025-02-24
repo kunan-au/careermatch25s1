@@ -13,11 +13,13 @@ resource "aws_emr_cluster" "emr_cluster" {
     emr_managed_slave_security_group  = var.security_group
   }
 
+  # Primary (Master) Node
   master_instance_group {
     instance_type  = var.master_instance_type
     instance_count = 1
   }
 
+  # Core Node(s)
   core_instance_group {
     instance_type  = var.core_instance_type
     instance_count = var.core_instance_count
