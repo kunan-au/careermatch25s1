@@ -7,8 +7,8 @@ export function ChatComponent() {
   const [newMessage, setNewMessage] = useState('');
 
   useEffect(() => {
-    // 获取消息列表
-    api.getMessages().then(response => {
+    // Fetch message list
+    api.getMessages().then((response) => {
       setMessages(response.data);
     });
   }, []);
@@ -23,7 +23,7 @@ export function ChatComponent() {
 
   return (
     <div>
-      {/* 聊天界面 UI */}
+      {/* Chat interface UI */}
       <div className="messages">
         {messages.map(msg => (
           <div key={msg.id} className="message">
