@@ -4,6 +4,7 @@ import { socketService } from '@/services/socket';
 import { mockSocketService } from '@/services/mockSocket';
 import VoiceRecorder from '@/components/VoiceRecorder';
 import VoiceMessage from '@/components/VoiceMessage';
+import FileMessage from '@/components/FileMessage';
 
 // Filter type definition
 type FilterType = 'all' | 'connections' | 'unread';
@@ -14,7 +15,7 @@ const MOCK_CONTACTS: ChatContact[] = [
     id: 1,
     name: "Henri Rousseau",
     title: "Software Engineer",
-    lastMessage: "Hey Julia!",
+    lastMessage: "Here's the proposal document we discussed.",
     timestamp: "8:55 AM",
     isOnline: true,
     unread: true,
@@ -30,7 +31,7 @@ const MOCK_CONTACTS: ChatContact[] = [
   },
   {
     id: 3,
-    name: "Kate at LinkedIn",
+    name: "Kate at CareerMatch",
     title: "LinkedIn Offer",
     lastMessage: "Find the right person for your role",
     timestamp: "Mar 20",
@@ -62,6 +63,28 @@ const MOCK_CONTACT_MESSAGES: Record<number, Message[]> = {
       sender: "Henri Rousseau",
       timestamp: new Date(Date.now() - 3400000).toISOString(),
       type: 'text'
+    },
+    {
+      id: 104,
+      text: "I've been working on the design mockups.",
+      sender: "Me",
+      timestamp: new Date(Date.now() - 3300000).toISOString(),
+      type: 'text'
+    },
+    {
+      id: 105,
+      fileName: "project_proposal.pdf",
+      fileUrl: "#",
+      sender: "Henri Rousseau",
+      timestamp: new Date(Date.now() - 3200000).toISOString(),
+      type: 'file'
+    },
+    {
+      id: 106,
+      text: "Here's the proposal document we discussed.",
+      sender: "Henri Rousseau",
+      timestamp: new Date(Date.now() - 3190000).toISOString(),
+      type: 'text'
     }
   ],
   2: [
@@ -78,17 +101,96 @@ const MOCK_CONTACT_MESSAGES: Record<number, Message[]> = {
       sender: "Me",
       timestamp: new Date(Date.now() - 86000000).toISOString(),
       type: 'text'
+    },
+    {
+      id: 203,
+      text: "That sounds great!",
+      sender: "Justice Moore",
+      timestamp: new Date(Date.now() - 3600000).toISOString(),
+      type: 'text'
     }
   ],
   3: [
     {
       id: 301,
       text: "Find the right person for your role",
-      sender: "Kate at LinkedIn",
+      sender: "Kate at CareerMatch",
       timestamp: new Date(Date.now() - 172800000).toISOString(),
+      type: 'text'
+    },
+    {
+      id: 302,
+      text: "I'm not sure I understand. Can you clarify?",
+      sender: "Kate at CareerMatch",
+      timestamp: new Date(Date.now() - 3600000).toISOString(),
+      type: 'text'
+    },
+    {
+      id: 303,
+      text: "Let's schedule a meeting to discuss this.",
+      sender: "Kate at CareerMatch",
+      timestamp: new Date(Date.now() - 1800000).toISOString(),
+      type: 'text'
+    },
+    {
+      id: 304,
+      text: "Thanks for letting me know.",
+      sender: "Kate at CareerMatch",
+      timestamp: new Date(Date.now() - 600000).toISOString(),
       type: 'text'
     }
   ]
+};
+
+// Create a function to get the last message for a contact
+const getLastMessageInfo = (messages: Message[]) => {
+  if (!messages || messages.length === 0) return { text: '', timestamp: '' };
+  
+  const lastMsg = messages[messages.length - 1];
+  let text = '';
+  
+  if (lastMsg.type === 'audio') {
+    text = 'Voice message';
+  } else if (lastMsg.type === 'file' && lastMsg.fileName) {
+    text = `File: ${lastMsg.fileName}`;
+  } else if (lastMsg.text) {
+    text = lastMsg.text;
+  }
+  
+  return { 
+    text, 
+    timestamp: lastMsg.timestamp 
+  };
+};
+
+// Format timestamp
+const formatTimestamp = (timestamp: string): string => {
+  const date = new Date(timestamp);
+  const now = new Date();
+  const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+  
+  if (diffDays === 0) {
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  } else if (diffDays < 7) {
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    return days[date.getDay()];
+  } else {
+    return `${date.getMonth() + 1}/${date.getDate()}`;
+  }
+};
+
+// Create initial contact data, ensuring last message matches message history
+const createInitialContacts = () => {
+  return MOCK_CONTACTS.map(contact => {
+    const messages = MOCK_CONTACT_MESSAGES[contact.id] || [];
+    const { text, timestamp } = getLastMessageInfo(messages);
+    
+    return {
+      ...contact,
+      lastMessage: text || contact.lastMessage,
+      timestamp: timestamp ? formatTimestamp(timestamp) : contact.timestamp
+    };
+  });
 };
 
 export default function MessagingPage() {
@@ -97,10 +199,16 @@ export default function MessagingPage() {
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
-  const [contacts, setContacts] = useState<ChatContact[]>(MOCK_CONTACTS);
+  const [contacts, setContacts] = useState<ChatContact[]>([]);
   const [showVoiceRecorder, setShowVoiceRecorder] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [contactMessages, setContactMessages] = useState<Record<number, Message[]>>(MOCK_CONTACT_MESSAGES);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Initialize contact list
+  useEffect(() => {
+    setContacts(createInitialContacts());
+  }, []);
 
   // Initialize WebSocket connection
   useEffect(() => {
@@ -120,33 +228,63 @@ export default function MessagingPage() {
 
   // Handle new messages
   const handleNewMessage = (message: Message) => {
-    if (selectedContact) {
-      // Add message to current conversation
-      setMessages(prev => [...prev, message]);
-      
-      // Update contact messages store
-      setContactMessages(prev => {
-        const contactId = selectedContact.id;
-        return {
-          ...prev,
-          [contactId]: [...(prev[contactId] || []), message]
-        };
-      });
-    }
+    // Find which contact this message belongs to
+    const contactId = contacts.find(c => c.name === message.sender)?.id || 
+                     (selectedContact ? selectedContact.id : null);
     
-    // Update contact list with last message
-    if (message.sender !== 'Me') {
+    if (contactId) {
+      // Update contact messages store for this contact
+      setContactMessages(prev => {
+        // Check if message already exists
+        const existingMessages = prev[contactId] || [];
+        const messageExists = existingMessages.some(msg => msg.id === message.id);
+        
+        // If message already exists, don't add it
+        if (messageExists) {
+          return prev;
+        }
+        
+        const updatedMessages = {
+          ...prev,
+          [contactId]: [...existingMessages, message]
+        };
+        
+        // If this is the currently selected contact, also update current message list
+        if (selectedContact && selectedContact.id === contactId) {
+          // Ensure we don't add duplicate messages
+          setMessages(prev => {
+            const messageExists = prev.some(msg => msg.id === message.id);
+            return messageExists ? prev : [...prev, message];
+          });
+        }
+        
+        return updatedMessages;
+      });
+      
+      // Update contact list with last message
       setContacts(prev => 
-        prev.map(contact => 
-          contact.name === message.sender 
-            ? { 
-                ...contact, 
-                lastMessage: message.text || 'Voice message', 
-                timestamp: formatTimestamp(message.timestamp),
-                unread: selectedContact?.id !== contact.id
-              } 
-            : contact
-        )
+        prev.map(contact => {
+          if (contact.id === contactId) {
+            let lastMessageText = '';
+            
+            // Format last message based on type
+            if (message.type === 'audio') {
+              lastMessageText = 'Voice message';
+            } else if (message.type === 'file' && message.fileName) {
+              lastMessageText = `File: ${message.fileName}`;
+            } else if (message.text) {
+              lastMessageText = message.text;
+            }
+            
+            return { 
+              ...contact, 
+              lastMessage: lastMessageText, 
+              timestamp: formatTimestamp(message.timestamp),
+              unread: selectedContact?.id !== contact.id
+            };
+          }
+          return contact;
+        })
       );
     }
   };
@@ -167,7 +305,19 @@ export default function MessagingPage() {
     if (selectedContact) {
       // Load messages for the selected contact
       const contactId = selectedContact.id;
-      setMessages(contactMessages[contactId] || []);
+      
+      // Ensure messages aren't duplicated, use Set to filter duplicate message IDs
+      const uniqueMessages = contactMessages[contactId] || [];
+      const messageIds = new Set();
+      const filteredMessages = uniqueMessages.filter(msg => {
+        if (messageIds.has(msg.id)) {
+          return false;
+        }
+        messageIds.add(msg.id);
+        return true;
+      });
+      
+      setMessages(filteredMessages);
       
       // Mark as read
       setContacts(prev => 
@@ -204,16 +354,29 @@ export default function MessagingPage() {
       type: 'text'
     });
 
-    // Update local message list
-    setMessages(prev => [...prev, message]);
-    
     // Update contact messages store
     setContactMessages(prev => {
       const contactId = selectedContact.id;
-      return {
+      const existingMessages = prev[contactId] || [];
+      
+      // Check if message already exists (based on ID)
+      const messageExists = existingMessages.some(msg => msg.id === message.id);
+      if (messageExists) {
+        return prev;
+      }
+      
+      const updatedMessages = {
         ...prev,
-        [contactId]: [...(prev[contactId] || []), message]
+        [contactId]: [...existingMessages, message]
       };
+      
+      // Update current message list
+      setMessages(prev => {
+        const messageExists = prev.some(msg => msg.id === message.id);
+        return messageExists ? prev : [...prev, message];
+      });
+      
+      return updatedMessages;
     });
     
     // Update contact list with last message
@@ -249,16 +412,29 @@ export default function MessagingPage() {
       type: 'audio'
     };
     
-    // Update local message list
-    setMessages(prev => [...prev, message]);
-    
     // Update contact messages store
     setContactMessages(prev => {
       const contactId = selectedContact.id;
-      return {
+      const existingMessages = prev[contactId] || [];
+      
+      // Check if message already exists (based on ID)
+      const messageExists = existingMessages.some(msg => msg.id === message.id);
+      if (messageExists) {
+        return prev;
+      }
+      
+      const updatedMessages = {
         ...prev,
-        [contactId]: [...(prev[contactId] || []), message]
+        [contactId]: [...existingMessages, message]
       };
+      
+      // Update current message list
+      setMessages(prev => {
+        const messageExists = prev.some(msg => msg.id === message.id);
+        return messageExists ? prev : [...prev, message];
+      });
+      
+      return updatedMessages;
     });
     
     // Update contact list with last message
@@ -276,28 +452,76 @@ export default function MessagingPage() {
     
     // Hide recording component
     setShowVoiceRecorder(false);
-    
-    // In a real application, upload the audio file to server
-    // For example using FormData and fetch API
-    // const formData = new FormData();
-    // formData.append('audio', audioBlob, 'recording.wav');
-    // fetch('/api/upload-audio', { method: 'POST', body: formData });
   };
 
-  // Format timestamp
-  const formatTimestamp = (timestamp: string): string => {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+  // Handle file upload
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!event.target.files || !event.target.files.length || !selectedContact) return;
     
-    if (diffDays === 0) {
-      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    } else if (diffDays < 7) {
-      const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-      return days[date.getDay()];
-    } else {
-      return `${date.getMonth() + 1}/${date.getDate()}`;
+    const file = event.target.files[0];
+    const fileUrl = URL.createObjectURL(file);
+    
+    // Create file message
+    const message: Message = {
+      id: Date.now(),
+      sender: 'Me',
+      timestamp: new Date().toISOString(),
+      fileUrl,
+      fileName: file.name,
+      type: 'file'
+    };
+    
+    // Send file message to WebSocket server
+    // In a real implementation, this would upload the file to a server
+    socketService.sendFileMessage(file, file.name, 'file');
+    
+    // Update contact messages store
+    setContactMessages(prev => {
+      const contactId = selectedContact.id;
+      const existingMessages = prev[contactId] || [];
+      
+      // Check if message already exists (based on ID)
+      const messageExists = existingMessages.some(msg => msg.id === message.id);
+      if (messageExists) {
+        return prev;
+      }
+      
+      const updatedMessages = {
+        ...prev,
+        [contactId]: [...existingMessages, message]
+      };
+      
+      // Update current message list
+      setMessages(prev => {
+        const messageExists = prev.some(msg => msg.id === message.id);
+        return messageExists ? prev : [...prev, message];
+      });
+      
+      return updatedMessages;
+    });
+    
+    // Update contact list with last message
+    setContacts(prev => 
+      prev.map(contact => 
+        contact.id === selectedContact.id 
+          ? { 
+              ...contact, 
+              lastMessage: `File: ${file.name}`, 
+              timestamp: formatTimestamp(new Date().toISOString()) 
+            } 
+          : contact
+      )
+    );
+    
+    // Clear the file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
+  };
+
+  // Trigger file input click
+  const openFileDialog = () => {
+    fileInputRef.current?.click();
   };
 
   // Filter contacts
@@ -322,6 +546,16 @@ export default function MessagingPage() {
         <VoiceMessage 
           audioUrl={message.audioUrl} 
           timestamp={message.timestamp} 
+          sender={message.sender}
+          formatTimestamp={formatTimestamp}
+        />
+      );
+    } else if (message.type === 'file' && message.fileUrl && message.fileName) {
+      return (
+        <FileMessage
+          fileUrl={message.fileUrl}
+          fileName={message.fileName}
+          timestamp={message.timestamp}
           sender={message.sender}
           formatTimestamp={formatTimestamp}
         />
@@ -501,6 +735,23 @@ export default function MessagingPage() {
                       onKeyDown={(e) => e.key === 'Enter' && sendTextMessage()}
                       className="flex-1 px-4 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                     />
+                    
+                    {/* Hidden file input */}
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleFileUpload}
+                      className="hidden"
+                    />
+                    
+                    {/* File button */}
+                    <button
+                      onClick={openFileDialog}
+                      className="p-2 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 focus:outline-none"
+                      title="Attach file"
+                    >
+                      <span className="text-lg">📎</span>
+                    </button>
                     
                     {/* Voice button */}
                     <button

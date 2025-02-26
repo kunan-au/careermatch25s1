@@ -1,16 +1,17 @@
 import { io, Socket } from 'socket.io-client';
 import { Message } from '@/types/chat';
 
-// 定义事件类型
+// Event type definitions
 export enum SocketEvent {
   CONNECT = 'connect',
   DISCONNECT = 'disconnect',
   MESSAGE = 'message',
   TYPING = 'typing',
   ONLINE_STATUS = 'online_status',
+  FILE_UPLOAD = 'file_upload',
 }
 
-// 单例模式实现 Socket 服务
+// Socket service implementation using Singleton pattern
 class SocketService {
   private static instance: SocketService;
   private socket: Socket | null = null;
@@ -26,15 +27,15 @@ class SocketService {
     return SocketService.instance;
   }
 
-  // 连接到 WebSocket 服务器
+  // Connect to WebSocket server
   public connect(userId: number): void {
-    // 暂时使用本地 WebSocket 服务
-    // 未来可以替换为实际的后端 WebSocket 地址
+    // Using local WebSocket server for now
+    // Can be replaced with actual backend WebSocket address in the future
     this.socket = io('http://localhost:8000', {
       query: { userId: userId.toString() },
     });
 
-    // 设置事件监听器
+    // Set up event listeners
     this.socket.on(SocketEvent.CONNECT, () => {
       console.log('Connected to WebSocket server');
     });
@@ -52,7 +53,7 @@ class SocketService {
     });
   }
 
-  // 断开连接
+  // Disconnect from server
   public disconnect(): void {
     if (this.socket) {
       this.socket.disconnect();
@@ -60,7 +61,7 @@ class SocketService {
     }
   }
 
-  // 发送消息
+  // Send message
   public sendMessage(message: Omit<Message, 'id' | 'timestamp'>): void {
     if (this.socket) {
       this.socket.emit(SocketEvent.MESSAGE, message);
@@ -69,34 +70,55 @@ class SocketService {
     }
   }
 
-  // 发送正在输入状态
+  // Send file message
+  public sendFileMessage(file: File, fileName: string, type: 'file'): void {
+    if (this.socket) {
+      // In a real implementation, we would upload the file to a server
+      // and then send the file URL in the message
+      const fileReader = new FileReader();
+      fileReader.readAsArrayBuffer(file);
+      
+      fileReader.onload = () => {
+        const arrayBuffer = fileReader.result;
+        this.socket?.emit(SocketEvent.FILE_UPLOAD, { 
+          file: arrayBuffer, 
+          fileName, 
+          type 
+        });
+      };
+    } else {
+      console.error('Socket not connected');
+    }
+  }
+
+  // Send typing status
   public sendTyping(isTyping: boolean, recipientId: number): void {
     if (this.socket) {
       this.socket.emit(SocketEvent.TYPING, { isTyping, recipientId });
     }
   }
 
-  // 添加消息监听器
+  // Add message listener
   public addMessageListener(listener: (message: Message) => void): void {
     this.messageListeners.push(listener);
   }
 
-  // 移除消息监听器
+  // Remove message listener
   public removeMessageListener(listener: (message: Message) => void): void {
     this.messageListeners = this.messageListeners.filter(l => l !== listener);
   }
 
-  // 添加在线状态监听器
+  // Add online status listener
   public addStatusListener(listener: (status: { userId: number; isOnline: boolean }) => void): void {
     this.statusListeners.push(listener);
   }
 
-  // 移除在线状态监听器
+  // Remove online status listener
   public removeStatusListener(listener: (status: { userId: number; isOnline: boolean }) => void): void {
     this.statusListeners = this.statusListeners.filter(l => l !== listener);
   }
 
-  // 检查是否已连接
+  // Check if connected
   public isConnected(): boolean {
     return this.socket?.connected || false;
   }

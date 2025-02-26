@@ -1,14 +1,14 @@
 import { Message } from '@/types/chat';
 import { socketService, SocketEvent } from './socket';
 
-// 模拟用户数据
+// Mock user data
 const MOCK_USERS = [
   { id: 1, name: 'Henri Rousseau', isOnline: true },
   { id: 2, name: 'Justice Moore', isOnline: false },
   { id: 3, name: 'Kate at LinkedIn', isOnline: true },
 ];
 
-// 模拟消息数据
+// Mock message data
 const MOCK_MESSAGES: Message[] = [
   {
     id: 1,
@@ -30,12 +30,13 @@ const MOCK_MESSAGES: Message[] = [
   },
 ];
 
-// 模拟 WebSocket 服务
+// Mock WebSocket service
 class MockSocketService {
   private static instance: MockSocketService;
   private isConnected = false;
   private currentUserId: number | null = null;
   private messageId = MOCK_MESSAGES.length + 1;
+  private lastRespondedUsers: Set<string> = new Set(); // Track users who have already responded
 
   private constructor() {}
 
@@ -46,50 +47,92 @@ class MockSocketService {
     return MockSocketService.instance;
   }
 
-  // 初始化模拟服务
+  // Initialize mock service
   public init(): void {
-    // 模拟用户登录
-    this.currentUserId = 0; // 当前用户 ID
+    // Simulate user login
+    this.currentUserId = 0; // Current user ID
     this.isConnected = true;
+    this.lastRespondedUsers.clear(); // Clear the list of users who have responded
 
-    // 添加消息监听器
+    // Add message listener
     socketService.addMessageListener(this.handleIncomingMessage);
 
-    // 发送初始消息
+    // Send initial messages
     setTimeout(() => {
+      // Only send initial messages once, don't repeat
+      const sentMessageIds = new Set();
       MOCK_MESSAGES.forEach(message => {
-        socketService['messageListeners'].forEach(listener => listener(message));
+        if (!sentMessageIds.has(message.id)) {
+          socketService['messageListeners'].forEach(listener => listener(message));
+          sentMessageIds.add(message.id);
+        }
       });
     }, 1000);
 
-    // 模拟用户在线状态更新
+    // Simulate user online status updates
     setInterval(() => {
       const randomUser = MOCK_USERS[Math.floor(Math.random() * MOCK_USERS.length)];
       const newStatus = { userId: randomUser.id, isOnline: Math.random() > 0.3 };
       
       socketService['statusListeners'].forEach(listener => listener(newStatus));
-    }, 30000); // 每 30 秒更新一次
+    }, 30000); // Update every 30 seconds
   }
 
-  // 处理发出的消息
+  // Handle outgoing messages
   private handleIncomingMessage = (message: Message): void => {
     if (message.sender === 'Me') {
-      // 模拟对方回复
+      // Simulate response, but ensure each user only responds once
       setTimeout(() => {
-        const randomUser = MOCK_USERS[Math.floor(Math.random() * MOCK_USERS.length)];
-        const reply: Message = {
-          id: this.messageId++,
-          text: this.getRandomReply(),
-          sender: randomUser.name,
-          timestamp: new Date().toISOString(),
-        };
+        // Randomly select a user, but avoid duplicate responses
+        let availableUsers = MOCK_USERS.filter(user => !this.lastRespondedUsers.has(user.name));
+        
+        // If all users have responded, reset
+        if (availableUsers.length === 0) {
+          this.lastRespondedUsers.clear();
+          availableUsers = MOCK_USERS;
+        }
+        
+        const randomUser = availableUsers[Math.floor(Math.random() * availableUsers.length)];
+        this.lastRespondedUsers.add(randomUser.name); // Mark this user as having responded
+        
+        let reply: Message;
+        
+        // Handle different message types
+        if (message.type === 'audio') {
+          // Reply to voice message
+          reply = {
+            id: this.messageId++,
+            text: "I received your voice message. Thanks!",
+            sender: randomUser.name,
+            timestamp: new Date().toISOString(),
+            type: 'text'
+          };
+        } else if (message.type === 'file') {
+          // Reply to file message
+          reply = {
+            id: this.messageId++,
+            text: `Thanks for sharing the file${message.fileName ? ': ' + message.fileName : ''}. I'll take a look at it.`,
+            sender: randomUser.name,
+            timestamp: new Date().toISOString(),
+            type: 'text'
+          };
+        } else {
+          // Reply to text message
+          reply = {
+            id: this.messageId++,
+            text: this.getRandomReply(),
+            sender: randomUser.name,
+            timestamp: new Date().toISOString(),
+            type: 'text'
+          };
+        }
         
         socketService['messageListeners'].forEach(listener => listener(reply));
-      }, 1000 + Math.random() * 2000); // 1-3 秒后回复
+      }, 1000 + Math.random() * 2000); // Reply after 1-3 seconds
     }
   };
 
-  // 获取随机回复
+  // Get random reply
   private getRandomReply(): string {
     const replies = [
       'That sounds great!',
