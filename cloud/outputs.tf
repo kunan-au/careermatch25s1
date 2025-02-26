@@ -65,3 +65,11 @@ output "private_rds_password_file" {
   description = "File path of the private RDS password"
   value       = local_file.private_rds_password_file.filename
 }
+
+output "emr_cluster_id" {
+  value = aws_emr_cluster.emr_cluster.id
+}
+
+output "emr_master_dns" {
+  value = aws_emr_cluster.emr_cluster.master_public_dns
+}

@@ -256,3 +256,64 @@ module "lambda" {
 }
 
 */
+
+#################################
+# Generate SSH Key Pair for EMR
+#################################
+resource "random_id" "emr_key_suffix" {
+  byte_length = 2
+}
+
+resource "tls_private_key" "emr_key" {
+  algorithm = "RSA"
+  rsa_bits  = 2048
+}
+
+resource "aws_key_pair" "emr_key" {
+  key_name   = "career-match-emr-${random_id.emr_key_suffix.hex}"
+  public_key = tls_private_key.emr_key.public_key_openssh
+}
+
+resource "local_file" "emr_key_file" {
+  content         = tls_private_key.emr_key.private_key_pem
+  filename        = "${path.module}/career-match-emr-${random_id.emr_key_suffix.hex}.pem"
+  file_permission = "0400"
+}
+
+#################################
+# EMR Cluster
+# The EMR is in Public Subnet
+#################################
+resource "aws_emr_cluster" "emr_cluster" {
+  name          = var.cluster_name
+  release_label = var.release_label
+  applications  = var.applications
+
+  log_uri     = "s3://${aws_s3_bucket.sandbox_analytics_bucket.bucket}/emr-logs/"
+  service_role = var.emr_service_role_arn
+
+  ec2_attributes {
+    # Use the newly-created key pair here:
+    key_name         = aws_key_pair.emr_key.key_name
+    subnet_id        = module.vpc.public_subnet_ids[0]
+    instance_profile = var.emr_instance_profile_arn
+  }
+
+  master_instance_group {
+    instance_type  = var.master_instance_type
+    instance_count = 1
+  }
+
+  core_instance_group {
+    instance_type  = var.core_instance_type
+    instance_count = 1
+  }
+
+  # Updated file path: points to the file within the modules/emr folder.
+  configurations_json = file("${path.module}/modules/emr/emr-config.json")
+
+  tags = {
+    Environment = var.environment
+    Project     = "CareerMatch-ETL"
+  }
+}

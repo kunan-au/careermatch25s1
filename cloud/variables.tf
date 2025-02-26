@@ -151,3 +151,61 @@ variable "existing_lambda_role_arn" {
   description = "Use an existing Lambda execution role"
   default     = "arn:aws:iam::423623841608:role/some-existing-lambda-role"
 }
+
+#################################
+# EMR Variables
+#################################
+
+# Name of the EMR cluster
+variable "cluster_name" {
+  type        = string
+  description = "Name of the EMR cluster"
+  default     = "career-match-emr"
+}
+
+# EMR release label (e.g., emr-6.7.0)
+variable "release_label" {
+  type        = string
+  description = "Release version for EMR"
+  default     = "emr-6.7.0"
+}
+
+# List of EMR applications to install (e.g. Spark, Hive, etc.)
+variable "applications" {
+  type        = list(string)
+  description = "List of applications to install on EMR"
+  default     = ["Spark", "Hive"]
+}
+
+# Key pair name for SSH access to EMR master node
+variable "key_name" {
+  type        = string
+  description = "Key pair name for EMR cluster"
+  default     = ""
+}
+
+# Master instance type (e.g., m5.xlarge)
+variable "master_instance_type" {
+  type        = string
+  description = "Instance type for the EMR master node"
+  default     = "m5.xlarge"
+}
+
+# Core instance type (e.g., m5.xlarge)
+variable "core_instance_type" {
+  type        = string
+  description = "Instance type for EMR core nodes"
+  default     = "m5.xlarge"
+}
+
+variable "emr_service_role_arn" {
+  type        = string
+  description = "ARN of the EMR service role"
+  default     = "arn:aws:iam::423623841608:role/service-role/AmazonEMR-ServiceRole-20250223T232319"
+}
+
+variable "emr_instance_profile_arn" {
+  type        = string
+  description = "ARN of the instance profile used by EMR nodes"
+  default     = "arn:aws:iam::423623841608:instance-profile/AmazonEMR-InstanceProfile-20250223T232300"
+}
