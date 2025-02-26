@@ -6,6 +6,7 @@ import { api } from "@/services/api";
 interface User {
   email: string;
   password: string;
+  role: "recruiter" | "candidate"; // Added role field
 }
 
 interface SuccessResponse {
@@ -47,17 +48,15 @@ const registerUser = async (user: User): Promise<RegisterResponse> => {
 };
 
 export function useRegister() {
-  const { mutateAsync: register, status } = useMutation<
-    RegisterResponse,
-    Error,
-    User
-  >({
+  const { mutateAsync: register, status } = useMutation<RegisterResponse, Error, User>({
     mutationFn: registerUser,
-    onSuccess: (data) => {
+    onSuccess: (data, variables) => {
       console.log(data);
-      toast.success(
-        "You have successfully registered! Please sign in to continue!"
-      );
+
+      // Store the role in local storage
+      localStorage.setItem("role", variables.role);
+
+      toast.success("You have successfully registered! Please sign in to continue.");
     },
     onError: (err) => {
       toast.error(err.message);
