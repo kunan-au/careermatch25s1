@@ -177,20 +177,6 @@ variable "applications" {
   default     = ["Spark", "Hive"]
 }
 
-# ARN of the IAM role for the EMR service
-variable "emr_service_role_arn" {
-  type        = string
-  description = "IAM service role ARN used by EMR"
-  default     = ""
-}
-
-# ARN of the instance profile attached to EMR core/master instances
-variable "emr_instance_profile_arn" {
-  type        = string
-  description = "IAM instance profile ARN for EMR nodes"
-  default     = ""
-}
-
 # Key pair name for SSH access to EMR master node
 variable "key_name" {
   type        = string
@@ -210,4 +196,16 @@ variable "core_instance_type" {
   type        = string
   description = "Instance type for EMR core nodes"
   default     = "m5.xlarge"
+}
+
+variable "emr_service_role_arn" {
+  type        = string
+  description = "ARN of the EMR service role"
+  default     = "arn:aws:iam::423623841608:role/service-role/AmazonEMR-ServiceRole-20250223T232319"
+}
+
+variable "emr_instance_profile_arn" {
+  type        = string
+  description = "ARN of the instance profile used by EMR nodes"
+  default     = "arn:aws:iam::423623841608:instance-profile/AmazonEMR-InstanceProfile-20250223T232300"
 }
