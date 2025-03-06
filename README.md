@@ -26,7 +26,7 @@ This platform is built on **AWS Cloud** infrastructure, incorporating an **end-t
 #### 2. Open the project in VS Code
 
 ```bash
- cd career-match-vite-fastapi
+ cd careermatch25s1
  code .
 ```
 
@@ -128,7 +128,7 @@ Try the following steps:
 
 ```bash
  git config --global core.autocrlf input 
- git clone https://gitlab.com/yupeiyuan0108/career-match-vite-fastapi.git
+ git clone https://github.com/kunan-au/careermatch25s1.git
 ```
 
 4. Open **Docker Desktop**.
