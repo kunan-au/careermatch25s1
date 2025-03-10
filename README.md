@@ -13,6 +13,58 @@ This platform is built on **AWS Cloud** infrastructure, incorporating an **end-t
 - View the official **Canva slides**: [Presentation](https://www.canva.com/design/DAGeslzAspM/7_6c2asRIXdfvrKGOuL54w/edit?utm_content=DAGeslzAspM&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton).
 - Explore the **Landing Page**: [Career Match Website](https://kendallan27.my.canva.site/)
 
+## Features
+
+### 1. User Authentication
+
+- **Recruiter Login and Registration**: Users can create accounts, register and log in.
+
+  ![Recruiter Login](./image/recruiter_login_image.png)
+
+
+### 2. Profile Management
+
+- **Candidate Profile**: Job seekers can create and edit their profiles and upload resumes.
+
+  ![Candidate Profile](./image/candidate_profile_image.png)
+  
+- **Resume Parsing**: Automated extraction of skills and experiences from uploaded resumes.
+
+
+### 3. Job Posting, Application, and Recommendations
+
+- **Job Listings**: Recruiters can post job openings with detailed descriptions, company, and job type.
+
+  ![Job Posting](./image/job_posting_image.png)
+
+- **Personalized Job Recommendations**: The system recommends jobs based on a candidate's profile, resume, and preferences, allowing job seekers to like or save jobs for later. It also shows a match score for each job.
+
+  ![Job Recommendations](./image/job_recommendations_image.png)
+  
+
+### 4. Messaging System
+
+- **Real-time Communication**: Integrated messaging system allowing direct communication between candidates and recruiters.
+
+  ![Messaging Interface](./image/messaging_interface_image.png)
+
+### 5. Skill Analysis and Upskilling Recommendations
+
+- **Skill Analysis**: Identifies matching skills from the candidate’s resume, highlights missing skills for better job opportunities, suggests related skills.
+- **Personalized Recommendations**: Offers career advice and suggests courses or certifications to enhance candidate profiles.
+
+  ![Skill Analysis](./image/skill_analysis_new.png)
+
+### 6. Networking Features （Under Developing）
+
+- **Peer-to-Peer Connections**: Allows users to connect with peers, mentors, and industry professionals to expand their professional network.
+
+### 7. Career Path Prediction (Under Developing)
+
+- **Career Trajectory Forecasting**: Predicts potential career paths by analyzing past job transitions and recommending optimal job movements using advanced modeling techniques.
+
+
+
 ## Project Startup Guide
 
 ### A. Initial Setup & Starting the Project
@@ -160,10 +212,3 @@ Then restart the frontend:
  cd client
  npm run dev
 ```
-
----
-
-### E. Additional Information
-
-- [Backend Readme](server/README.md)
-- [Frontend Readme](client/README.md)
