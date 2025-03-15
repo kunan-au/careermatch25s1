@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 
 import { cn } from "@/lib/utils";
@@ -15,11 +15,13 @@ type FormValues = {
   email: string;
   password: string;
   rePassword: string;
+  role: "recruiter" | "candidate"; // Added role field
 };
 
 export function SignUpAuthForm({ className, ...props }: UserAuthFormProps) {
   const { status, register } = useRegister();
   const navigate = useNavigate();
+  const [role, setRole] = useState<"recruiter" | "candidate">("candidate");
 
   // react hoot form
   const {
@@ -35,18 +37,33 @@ export function SignUpAuthForm({ className, ...props }: UserAuthFormProps) {
         navigate("/");
       }, 1000);
     }
-  }, [status, navigate]);
+  }, [status, navigate, role]);
 
   const onSubmit: SubmitHandler<FormValues> = (data) => {
     console.log(data);
     const { email, password } = data;
-    register({ email, password });
+    register({ email, password, role });
   };
 
   return (
     <div className={cn("grid gap-6", className)} {...props}>
       <form onSubmit={handleSubmit(onSubmit)}>
         <div className="grid gap-2">
+
+            {/* Role selection dropdown */}
+            <div className="grid gap-1">
+            <Label htmlFor="role">Sign up as</Label>
+            <select
+              id="role"
+              className="border border-gray-300 rounded-md p-2"
+              value={role}
+              onChange={(e) => setRole(e.target.value as "recruiter" | "candidate")}
+            >
+              <option value="candidate">Candidate</option>
+              <option value="recruiter">Recruiter</option>
+            </select>
+          </div>
+
           <div className="grid gap-1">
             <Label htmlFor="email">Email</Label>
             <Input

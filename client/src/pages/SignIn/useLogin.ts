@@ -6,6 +6,7 @@ import { api } from "@/services/api";
 interface User {
   email: string;
   password: string;
+  role: "recruiter" | "candidate"; // Added role field
 }
 
 interface SuccessResponse {
@@ -47,13 +48,14 @@ export function useLogin() {
     data: userToken,
   } = useMutation<LoginResponse, Error, User>({
     mutationFn: loginUser,
-    onSuccess: (data) => {
+    onSuccess: (data, variables) => {
       console.log(data);
       // Save the access token to local storage
       localStorage.setItem(
         "access_token",
         data?.access_token ? data.access_token : ""
       );
+      localStorage.setItem("role", variables.role); // Store the role
       toast.success("Login successfully!");
     },
     onError: (err) => {
