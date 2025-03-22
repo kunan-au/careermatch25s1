@@ -1,15 +1,18 @@
-# file: app/services/intent_clarification.py
 from typing import Dict, Any, List, Optional, Tuple
 from agent.services.intent_classification import IntentType, IntentClassifier
 import os
 import json
 import requests
+from dotenv import load_dotenv
+
+# load .env file
+load_dotenv()
 
 class IntentClarifier:
     """Service for handling low-confidence intent classifications"""
     
     def __init__(self):
-        self.api_key = os.environ.get("OPENAI_API_KEY")
+        self.api_key = os.getenv("OPENAI_API_KEY")
         self.model = "gpt-4o"  # Or another appropriate model
         self.api_url = "https://api.openai.com/v1/chat/completions"
         self.headers = {
