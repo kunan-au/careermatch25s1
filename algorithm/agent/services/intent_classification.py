@@ -13,14 +13,14 @@ class IntentType(str, Enum):
     CANDIDATE_SEARCH = "candidate_search"
     UNKNOWN = "unknown"
 
-from dotenv import load_dotenv
-import os
+# from dotenv import load_dotenv
+# import os
 
-# 加载 .env 文件
-load_dotenv()
+# # load .env file
+# load_dotenv()
 
-import json
-import os
+# import json
+# import os
 
 # CACHE_FILE = "intent_cache.json"
 
