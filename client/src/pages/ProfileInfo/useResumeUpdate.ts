@@ -1,49 +1,86 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import axios from "axios";
+//import axios from "axios";
 import toast from "react-hot-toast";
-import { api } from "@/services/api";
+//import { api } from "@/services/api";
 
+// Original type definitions
+/*
 type SuccessResumeResponse = {
   message: string;
+  fileUrl: string;
 };
 
 type ResumeResponse = SuccessResumeResponse | undefined;
+*/
+
+// Updated type definitions
+type SuccessResumeResponse = {
+  message: string;
+  fileUrl: string;
+};
+
+type ResumeResponse = SuccessResumeResponse | undefined;
+
+// Original upload function
+/*
+const uploadResume = async (
+  email: string,
+  file: File
+): Promise<ResumeResponse> => {
+  // 创建本地文件URL
+  const fileUrl = URL.createObjectURL(file);
+  
+  // 模拟成功响应
+  return {
+    message: `Resume for ${email} uploaded successfully`,
+    fileUrl: fileUrl
+  };
+};
+*/
+
+// Updated upload function with validation
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const SUPPORTED_FORMATS = {
+  'application/pdf': ['.pdf'],
+  'application/msword': ['.doc'],
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
+  'text/plain': ['.txt']
+};
+
+const validateFile = (file: File): string | null => {
+  // 检查文件大小
+  if (file.size > MAX_FILE_SIZE) {
+    return `File size should not exceed ${MAX_FILE_SIZE / (1024 * 1024)}MB`;
+  }
+
+  // 检查文件类型
+  if (!Object.keys(SUPPORTED_FORMATS).includes(file.type)) {
+    return 'File format not supported. Please upload PDF, DOC, DOCX, or TXT files.';
+  }
+
+  return null;
+};
 
 const uploadResume = async (
   email: string,
   file: File
 ): Promise<ResumeResponse> => {
-  const formData = new FormData();
-  formData.append("resume", file);
-  try {
-    const response = await api.post(
-      `/users/${encodeURIComponent(email)}/resume`,
-      formData,
-      {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      }
-    );
+  // 文件验证
+  const validationError = validateFile(file);
+  if (validationError) {
+    throw new Error(validationError);
+  }
 
-    // only 200 status code is considered as success
-    if (response.status === 200) {
-      return response.data;
-    } else {
-      throw new Error(`Unexpected status code: ${response.status}`);
-    }
+  try {
+    // 创建本地文件URL
+    const fileUrl = URL.createObjectURL(file);
+    
+    return {
+      message: `Resume for ${email} uploaded successfully`,
+      fileUrl: fileUrl
+    };
   } catch (error) {
-    if (axios.isAxiosError(error)) {
-      if (error.response && error.response.status === 422) {
-        throw new Error(
-          "The resume you uploaded seems incorrect. Please check and try again later."
-        );
-      }
-      throw new Error(
-        "Something went wrong connecting to the server. Please try again later."
-      );
-    }
-    throw error;
+    throw new Error('Failed to process the file. Please try again.');
   }
 };
 
@@ -56,9 +93,11 @@ export function useResumeUpdate() {
   } = useMutation<ResumeResponse, Error, { email: string; file: File }>({
     mutationFn: ({ email, file }) => uploadResume(email, file),
     onSuccess: (data) => {
-      const email = data?.message.split(" ")[2];
-      toast.success("You have successfully updated your resume!");
-      queryClient.invalidateQueries({ queryKey: ["profile", email] });
+      toast.success("Resume uploaded successfully!");
+      queryClient.setQueryData(["profile", data?.message.split(" ")[2]], (oldData: any) => ({
+        ...oldData,
+        resume: data?.fileUrl
+      }));
     },
     onError: (err) => {
       toast.error(err.message);

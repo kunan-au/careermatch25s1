@@ -253,10 +253,11 @@ export default function ProfileInfo() {
               <iframe
                 src={
                   resume
-                    ? `https://careermatch-resume-2024.s3.ap-southeast-2.amazonaws.com/${resume}`
+                    ? resume.startsWith('blob:') 
+                      ? resume 
+                      : `https://careermatch-resume-2024.s3.ap-southeast-2.amazonaws.com/${resume}`
                     : "./sample-resume.pdf"
                 }
-                // src="./sample-resume.pdf"
                 className="w-full h-96"
               ></iframe>
             </div>
@@ -272,8 +273,7 @@ export default function ProfileInfo() {
               <DialogHeader>
                 <DialogTitle>Update Resume</DialogTitle>
                 <DialogDescription>
-                  Upload your latest resume here. Only PDF files are accepted.
-                  Click save when you're done.
+                  Upload your latest resume here. Accepted formats: PDF, DOC, DOCX, and TXT files. Click save when you're done.
                 </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleResumeSubmit}>
@@ -286,7 +286,7 @@ export default function ProfileInfo() {
                       type="file"
                       id="resume"
                       onChange={handleResumeChange}
-                      accept="application/pdf"
+                      accept=".pdf,.txt,.doc,.docx"
                       className="col-span-3"
                     />
                   </div>

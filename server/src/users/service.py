@@ -75,7 +75,7 @@ async def upload_user_resume(email: str, resume: UploadFile):
     if not user_dict:
         raise HTTPException(status_code=404, detail="User not found")
 
-    if resume.content_type != 'application/pdf':
+    if resume.content_type not in ['application/pdf', 'text/plain', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']:
         raise HTTPException(status_code=400, detail="Invalid file type")
 
     filename = await save_resume_file(resume)
