@@ -3,7 +3,10 @@ import os
 import json
 import requests
 from enum import Enum
+from dotenv import load_dotenv
 
+# load .env file
+load_dotenv()
 
 class IntentType(str, Enum):
     RESUME_ANALYSIS = "resume_analysis"
@@ -12,15 +15,6 @@ class IntentType(str, Enum):
     JOB_POSTING = "job_posting"
     CANDIDATE_SEARCH = "candidate_search"
     UNKNOWN = "unknown"
-
-# from dotenv import load_dotenv
-# import os
-
-# # load .env file
-# load_dotenv()
-
-# import json
-# import os
 
 # CACHE_FILE = "intent_cache.json"
 
