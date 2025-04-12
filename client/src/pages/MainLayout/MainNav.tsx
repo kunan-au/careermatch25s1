@@ -32,10 +32,10 @@ const MainNav = () => {
   const { user_profile } = useUser();
   const { email } = user_profile ? user_profile : { email: "test user" };
   const { status, logout } = useLogout();
-
   const { user_info } = useProfile(email);
-
   const { name, avatar } = user_info || defaultInfoData;
+
+  const role = localStorage.getItem("role");
 
   useEffect(() => {
     if (status === "success") {
@@ -56,47 +56,90 @@ const MainNav = () => {
           <img className="w-10" src="/company-logo.png" alt="logo" />
         </NavLink>
 
-        <NavLink
-          to="jobs"
-          className={({ isActive }) =>
-            isActive
-              ? "text-primary text-lg font-medium"
-              : "text-lg font-medium text-muted-foreground transition-colors hover:text-primary"
-          }
-        >
-          Jobs
-        </NavLink>
-        <NavLink
-          to="post"
-          className={({ isActive }) =>
-            isActive
-              ? "text-primary text-lg font-medium"
-              : "text-lg font-medium text-muted-foreground transition-colors hover:text-primary"
-          }
-        >
-          Post Job
-        </NavLink>
-        <NavLink
-          to="messaging"
-          className={({ isActive }) =>
-            isActive
-              ? "text-primary text-lg font-medium"
-              : "text-lg font-medium text-muted-foreground transition-colors hover:text-primary"
-          }
-        >
-          Messaging
-        </NavLink>
-        <NavLink
-          to="network"
-          className={({ isActive }) =>
-            isActive
-              ? "text-primary text-lg font-medium"
-              : "text-lg font-medium text-muted-foreground transition-colors hover:text-primary"
-          }
-        >
-          My Network
-        </NavLink>
+        {/* Candidate Navigation */}
+        {role === "candidate" && (
+          <>
+            <NavLink
+              to="jobs"
+              className={({ isActive }) =>
+                isActive
+                  ? "text-primary text-lg font-medium"
+                  : "text-lg font-medium text-muted-foreground transition-colors hover:text-primary"
+              }
+            >
+              Jobs
+            </NavLink>
+            <NavLink
+              to="messaging"
+              className={({ isActive }) =>
+                isActive
+                  ? "text-primary text-lg font-medium"
+                  : "text-lg font-medium text-muted-foreground transition-colors hover:text-primary"
+              }
+            >
+              Messaging
+            </NavLink>
+            <NavLink
+              to="network"
+              className={({ isActive }) =>
+                isActive
+                  ? "text-primary text-lg font-medium"
+                  : "text-lg font-medium text-muted-foreground transition-colors hover:text-primary"
+              }
+            >
+              My Network
+            </NavLink>
+          </>
+        )}
+
+      {/* Recruiter Navigation */}
+      {role === "recruiter" && (
+        <>
+          <NavLink
+            to="post"
+            className={({ isActive }) =>
+              isActive
+                ? "text-primary text-lg font-medium"
+                : "text-lg font-medium text-muted-foreground transition-colors hover:text-primary"
+            }
+          >
+            Post Job
+          </NavLink>
+          <NavLink
+            to="recruiterDashboard"
+            className={({ isActive }) =>
+              isActive
+                ? "text-primary text-lg font-medium"
+                : "text-lg font-medium text-muted-foreground transition-colors hover:text-primary"
+            }
+          >
+            View Posted Jobs
+          </NavLink>
+          <NavLink
+            to="candidates"
+            className={({ isActive }) =>
+              isActive
+                ? "text-primary text-lg font-medium"
+                : "text-lg font-medium text-muted-foreground transition-colors hover:text-primary"
+            }
+          >
+            Candidate List
+          </NavLink>
+          <NavLink
+            to="messaging"
+            className={({ isActive }) =>
+              isActive
+                ? "text-primary text-lg font-medium"
+                : "text-lg font-medium text-muted-foreground transition-colors hover:text-primary"
+            }
+          >
+            Messaging
+          </NavLink>
+        </>
+      )}
       </div>
+
+      {/* Avatar + Logout */}
       <div className="flex items-center space-x-2 lg:space-x-4  my-4 mx-10">
         <Avatar>
           <AvatarImage
