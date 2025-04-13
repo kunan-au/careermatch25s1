@@ -12,6 +12,7 @@ from src.config import app_configs, settings
 from src.external_service.router import router as external_service_router
 from src.jobs.router import router as jobs_router
 from src.users.router import router as users_router
+from .messaging.routes import router as messaging_router
 
 
 @asynccontextmanager
@@ -61,4 +62,5 @@ app.include_router(
 app.include_router(
     users_router, prefix="/users", tags=["Users"], responses={404: {"description": "Not found"}}
 )
+app.include_router(messaging_router, prefix="/api/messaging", tags=["messaging"])
 
