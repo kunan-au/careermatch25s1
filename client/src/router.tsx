@@ -13,6 +13,7 @@ import HomePage from "./pages/HomePage";
 import JobPost from "./pages/JobPost";
 import ProfileInfo from "./pages/ProfileInfo";
 import ProfileFavorites from "./pages/ProfileFavorites";
+import ProfileHistory from "./pages/ProfileHistory";
 import MyNetwork from "./pages/MyNetwork/index";
 
 const router = createBrowserRouter([
@@ -39,6 +40,7 @@ const router = createBrowserRouter([
         children: [
           { index: true, element: <ProfileInfo /> },
           { path: "favorites", element: <ProfileFavorites /> },
+          { path: "history", element: <ProfileHistory /> },
         ],
       },
       { path: "homePage", element: <HomePage /> },

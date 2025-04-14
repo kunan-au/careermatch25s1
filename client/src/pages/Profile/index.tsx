@@ -27,6 +27,16 @@ export default function Profile() {
           >
             Favorite Jobs
           </NavLink>
+          <NavLink
+            to="history"
+            className={({ isActive }) =>
+              isActive
+                ? buttonVariants({ variant: "outline" })
+                : buttonVariants({ variant: "ghost" })
+            }
+          >
+            History
+          </NavLink>
         </div>
       </div>
       <Outlet />
