@@ -8,6 +8,7 @@ class UserBase(CustomModel):
     name: str
     avatar: str
     resume: str
+    role: str = "candidate" 
 
 class UserCreate(UserBase):
     pass
@@ -17,6 +18,7 @@ class UserUpdate(UserBase):
     name: str
     avatar: str
     resume: str
+    role: str = "candidate"
 
 class UserRead(UserBase):
     pass
