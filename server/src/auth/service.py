@@ -4,6 +4,7 @@ from typing import Any
 
 from pydantic import UUID4
 from sqlalchemy import insert, select
+from src.auth.exceptions import InvalidCredentials, RoleMismatch
 
 from src import utils
 from src.auth.config import auth_config
@@ -94,5 +95,10 @@ async def authenticate_user(auth_data: AuthUser) -> dict[str, Any]:
 
     if not check_password(auth_data.password, user["password"]):
         raise InvalidCredentials()
+
+    profile_query = select(user_profile).where(user_profile.c.email == auth_data.email)
+    profile = await fetch_one(profile_query)
+    if not profile or profile["role"] != auth_data.role:
+        raise RoleMismatch()
 
     return user

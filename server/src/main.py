@@ -3,13 +3,15 @@ from typing import AsyncGenerator
 
 import redis.asyncio as aioredis
 import sentry_sdk
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from starlette.middleware.cors import CORSMiddleware
 
 from src import redis
+from src.auth.exceptions import RoleMismatch
 from src.auth.router import router as auth_router
 from src.config import app_configs, settings
-from src.database import metadata, engine  # ⬅️ import for table creation
+from src.database import metadata, engine
 from src.external_service.router import router as external_service_router
 from src.jobs.router import router as jobs_router
 from src.users.router import router as users_router
@@ -35,6 +37,14 @@ async def lifespan(_application: FastAPI) -> AsyncGenerator:
 
 
 app = FastAPI(**app_configs, lifespan=lifespan)
+
+# Handle RoleMismatch errors with a custom message
+@app.exception_handler(RoleMismatch)
+async def role_mismatch_exception_handler(request: Request, exc: RoleMismatch):
+    return JSONResponse(
+        status_code=403,
+        content={"detail": "This account is registered with a different role. Please log in with the correct role."},
+    )
 
 # CORS configuration
 app.add_middleware(

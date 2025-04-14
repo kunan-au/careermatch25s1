@@ -37,15 +37,26 @@ export function useLogin() {
       try {
         const profile = await api.get(`/users/${variables.email}`);
         const realRole = profile.data.role;
-        localStorage.setItem("role", realRole);
-      } catch {
-        toast.error("Failed to fetch user profile.");
-      }
 
-      toast.success("Login successfully!");
+        if (realRole !== variables.role) {
+          throw new Error(
+            `This account is registered as a "${realRole}". Please log in with the correct role.`
+          );
+        }
+
+        localStorage.setItem("role", realRole);
+        toast.success("Login successfully!");
+      } catch (err: any) {
+        const errorMessage = err?.message || "Failed to fetch user profile.";
+        toast.error(errorMessage);
+      }
     },
     onError: (err) => {
-      toast.error(err.message);
+      if (axios.isAxiosError(err) && err.response?.data?.detail) {
+        toast.error(err.response.data.detail);
+      } else {
+        toast.error(err.message || "Login failed. Please try again.");
+      }
     },
   });
 

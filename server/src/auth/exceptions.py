@@ -24,3 +24,6 @@ class EmailTaken(BadRequest):
 
 class RefreshTokenNotValid(NotAuthenticated):
     DETAIL = ErrorCode.REFRESH_TOKEN_NOT_VALID
+
+class RoleMismatch(Exception):
+    DETAIL = ErrorCode.ROLE_MISMATCH
