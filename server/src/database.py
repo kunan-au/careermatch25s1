@@ -52,6 +52,7 @@ user_profile = Table(
     Column("name", String),
     Column("avatar", String),
     Column("resume", String),
+    Column("role", String, nullable=False, server_default="candidate"),
 )
 
 refresh_tokens = Table(

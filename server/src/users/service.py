@@ -13,12 +13,13 @@ from src.users.schemas import UserUpdate
 SUPPORTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/jpg"]
 
 
-async def create_user(email: str):
+async def create_user(email: str, role: str = "candidate"):
     insert_query = insert(user_profile).values(
         email=email,
         name="",
         avatar="",
         resume="",
+        role=role 
     )
     await execute(insert_query)
 
