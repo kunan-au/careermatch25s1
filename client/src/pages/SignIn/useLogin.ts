@@ -6,7 +6,7 @@ import { api } from "@/services/api";
 interface User {
   email: string;
   password: string;
-  role: "recruiter" | "candidate"; // Added role field
+  role: "recruiter" | "candidate";
 }
 
 interface SuccessResponse {
@@ -17,28 +17,11 @@ interface SuccessResponse {
 type LoginResponse = SuccessResponse | undefined;
 
 const loginUser = async (user: User): Promise<LoginResponse> => {
-  try {
-    const response = await api.post("/auth/users/tokens", user);
-
-    // only 200 status code is considered as success
-    if (response.status === 200) {
-      return response.data;
-    } else {
-      throw new Error(`Unexpected status code: ${response.status}`);
-    }
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
-      if (error.response && error.response.status === 401) {
-        throw new Error(
-          "Username or password is incorrect. Please check and try again."
-        );
-      }
-      throw new Error(
-        "Something went wrong connecting to the server. Please try again later."
-      );
-    }
-    throw error;
+  const response = await api.post("/auth/users/tokens", user);
+  if (response.status === 200) {
+    return response.data;
   }
+  throw new Error(`Unexpected status code: ${response.status}`);
 };
 
 export function useLogin() {
@@ -48,14 +31,17 @@ export function useLogin() {
     data: userToken,
   } = useMutation<LoginResponse, Error, User>({
     mutationFn: loginUser,
-    onSuccess: (data, variables) => {
-      console.log(data);
-      // Save the access token to local storage
-      localStorage.setItem(
-        "access_token",
-        data?.access_token ? data.access_token : ""
-      );
-      localStorage.setItem("role", variables.role); // Store the role
+    onSuccess: async (data, variables) => {
+      localStorage.setItem("access_token", data?.access_token ?? "");
+
+      try {
+        const profile = await api.get(`/users/${variables.email}`);
+        const realRole = profile.data.role;
+        localStorage.setItem("role", realRole);
+      } catch {
+        toast.error("Failed to fetch user profile.");
+      }
+
       toast.success("Login successfully!");
     },
     onError: (err) => {

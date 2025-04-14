@@ -10,23 +10,34 @@ from src.auth.config import auth_config
 from src.auth.exceptions import InvalidCredentials
 from src.auth.schemas import AuthUser
 from src.auth.security import check_password, hash_password
-from src.database import auth_user, execute, fetch_one, refresh_tokens
+from src.database import auth_user, user_profile, execute, fetch_one, refresh_tokens
 
 
 async def create_user(user: AuthUser) -> dict[str, Any] | None:
-    insert_query = (
+    insert_auth = (
         insert(auth_user)
-        .values(
-            {
-                "email": user.email,
-                "password": hash_password(user.password),
-                "created_at": datetime.utcnow(),
-            }
-        )
+        .values({
+            "email": user.email,
+            "password": hash_password(user.password),
+            "created_at": datetime.utcnow(),
+        })
         .returning(auth_user)
     )
+    auth_record = await fetch_one(insert_auth)
 
-    return await fetch_one(insert_query)
+    insert_profile = (
+        insert(user_profile)
+        .values({
+            "email": user.email,
+            "name": "",
+            "avatar": "",
+            "resume": "",
+            "role": user.role,  # save role
+        })
+    )
+    await execute(insert_profile)
+
+    return auth_record
 
 
 async def get_user_by_id(user_id: int) -> dict[str, Any] | None:
