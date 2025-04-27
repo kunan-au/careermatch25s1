@@ -13,6 +13,7 @@ import HomePage from "./pages/HomePage";
 import JobPost from "./pages/JobPost";
 import ProfileInfo from "./pages/ProfileInfo";
 import ProfileFavorites from "./pages/ProfileFavorites";
+import MessagingPage from "./pages/Messaging";
 
 const router = createBrowserRouter([
   {
@@ -42,6 +43,7 @@ const router = createBrowserRouter([
       },
       { path: "homePage", element: <HomePage /> },
       { path: "post", element: <JobPost /> },
+      { path: "messaging", element: <MessagingPage /> },
     ],
   },
   { path: "/terms-of-service", element: <TermsOfService /> },

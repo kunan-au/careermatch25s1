@@ -1,10 +1,9 @@
 import axios, { AxiosInstance } from "axios";
 import { Message } from "@/types/chat";
 
-// Extend AxiosInstance type with custom methods
 interface CustomApi extends AxiosInstance {
-  getMessages(): Promise<{ data: Message[] }>;
-  sendMessage(message: string): Promise<{ data: Message }>;
+  getMessages: () => Promise<{ data: Message[] }>;
+  sendMessage: (message: string) => Promise<{ data: Message }>;
 }
 
 // Create base axios instance
@@ -18,12 +17,12 @@ const axiosInstance = axios.create({
 
 // Add custom methods
 axiosInstance.getMessages = async () => {
-  const response = await axiosInstance.get<Message[]>('/messages');
+  const response = await axiosInstance.get<Message[]>('/api/messaging/messages');
   return response;
 };
 
 axiosInstance.sendMessage = async (message: string) => {
-  const response = await axiosInstance.post<Message>('/messages', { message });
+  const response = await axiosInstance.post<Message>('/api/messaging/messages', { message });
   return response;
 };
 
