@@ -260,3 +260,130 @@ def execute_skill_analysis_workflow(job_description, cv, user_role):
 
 
     return final_output
+
+# --- CRM-175: Finalize Role-Specific Output & Validation Stub ---
+
+def validate_final_output(analysis_result, user_role):
+    """
+    Validates the structure of the final output based on the user role
+    that generated it. Acts as a "Test Execution Stub".
+    """
+    # print(f"\n--- CRM-175: Validating Final Output Structure for Role: {user_role} ---")
+    is_valid = True
+    if not isinstance(analysis_result, dict):
+        print("Error: Final output is not a dictionary.")
+        return False
+
+    # Define expected keys based on role
+    if user_role == "recruiter":
+        expected_keys = ["skill_analysis", "summary_for_recruiter"]
+    elif user_role == "job_seeker":
+        expected_keys = ["skill_analysis", "advice_for_job_seeker"]
+    else:
+        print(f"Error: Unknown user_role '{user_role}' for validation.")
+        return False
+
+    # Check presence of expected keys
+    missing_keys = []
+    for key in expected_keys:
+        if key not in analysis_result:
+            missing_keys.append(key)
+            is_valid = False
+    if missing_keys:
+        print(f"Error: Missing expected key(s) {missing_keys} for role '{user_role}'.")
+
+
+    # Basic type checks for present keys
+    if "skill_analysis" in analysis_result and not isinstance(analysis_result["skill_analysis"], dict):
+         print("Error: 'skill_analysis' should be a dictionary, but found", type(analysis_result["skill_analysis"]))
+         is_valid = False
+    if "summary_for_recruiter" in analysis_result and not isinstance(analysis_result["summary_for_recruiter"], str):
+         print("Error: 'summary_for_recruiter' should be a string, but found", type(analysis_result["summary_for_recruiter"]))
+         is_valid = False
+    if "advice_for_job_seeker" in analysis_result and not isinstance(analysis_result["advice_for_job_seeker"], str):
+         print("Error: 'advice_for_job_seeker' should be a string, but found", type(analysis_result["advice_for_job_seeker"]))
+         is_valid = False
+
+    if is_valid:
+        print(f"Final output structure is valid for role '{user_role}'.")
+    else:
+        print(f"Final output structure is invalid for role '{user_role}'.")
+    return is_valid
+
+# --- Example Usage (Demonstrating role-based calls and validation) ---
+
+# ** REPLACE WITH YOUR ACTUAL EXAMPLE JOB DESCRIPTION AND CV TEXT **
+job_description_example = """=== 'JOB DESCRIPTION:' ===
+Senior Full Stack Developer
+
+We are seeking a highly skilled Senior Full Stack Developer to join our dynamic team. The ideal candidate will have a strong background in both front-end and back-end development, with a passion for creating efficient, scalable, and maintainable code.
+
+Required Skills and Experience:
+- 5+ years of experience in full stack development
+- Proficiency in JavaScript, HTML5, and CSS3
+- Strong experience with React.js and Node.js
+- Familiarity with database technologies (MySQL, MongoDB)
+- Experience with RESTful APIs and microservices architecture
+- Knowledge of cloud platforms (AWS or Azure)
+- Version control with Git
+- Agile development methodologies
+- Strong problem-solving and analytical skills
+- Excellent communication and teamwork abilities
+
+Nice to Have:
+- Experience with TypeScript
+- Familiarity with Docker and Kubernetes
+- Knowledge of GraphQL
+- Experience with CI/CD pipelines
+- Understanding of DevOps practices
+=== 'END JOB DESCRIPTION' ==="""
+
+cv_example = """=== CV START: ===
+John Doe
+Senior Web Developer
+
+Professional Summary:
+Dedicated and innovative web developer with 6 years of experience in creating responsive and user-friendly web applications. Proficient in front-end and back-end technologies with a strong focus on JavaScript ecosystems. Committed to writing clean, efficient code and staying updated with the latest industry trends.
+
+Technical Skills:
+- Languages: JavaScript (ES6+), HTML5, CSS3, Python
+- Front-end: React.js, Vue.js, jQuery, Bootstrap
+- Back-end: Node.js, Express.js
+- Databases: MySQL, PostgreSQL, MongoDB
+- Version Control: Git, GitHub
+- APIs: RESTful API design and integration
+- Cloud Platforms: Basic AWS experience (AWS Certified Developer – Associate)
+- Other: Webpack, Babel, npm, Agile methodologies
+=== CV END: ==="""
+
+if __name__ == "__main__":
+    if llm is None:
+        print("Cannot run examples because LLM failed to initialize.")
+    else:
+        # --- Run for Recruiter ---
+        try:
+            print("\n\n======= EXECUTING FOR RECRUITER =======")
+            recruiter_result = execute_skill_analysis_workflow(job_description_example, cv_example, user_role="recruiter")
+            recruiter_result_json = json.dumps(recruiter_result, indent=2)
+            print("\n--- CRM-175: Recruiter Final Output (JSON) ---")
+            print(recruiter_result_json)
+            validate_final_output(recruiter_result, user_role="recruiter")
+        except Exception as e:
+            print(f"\nRecruiter workflow failed: {e}")
+            # Optionally print traceback for debugging
+            # import traceback
+            # traceback.print_exc()
+
+        # --- Run for Job Seeker ---
+        try:
+            print("\n\n======= EXECUTING FOR JOB SEEKER =======")
+            job_seeker_result = execute_skill_analysis_workflow(job_description_example, cv_example, user_role="job_seeker")
+            job_seeker_result_json = json.dumps(job_seeker_result, indent=2)
+            print("\n--- CRM-175: Job Seeker Final Output (JSON) ---")
+            print(job_seeker_result_json)
+            validate_final_output(job_seeker_result, user_role="job_seeker")
+        except Exception as e:
+            print(f"\nJob Seeker workflow failed: {e}")
+            # Optionally print traceback for debugging
+            # import traceback
+            # traceback.print_exc()
