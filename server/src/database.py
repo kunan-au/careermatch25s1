@@ -76,7 +76,31 @@ jobs = Table(
     Column("created_at", DateTime, server_default=func.now(), nullable=False),
     Column("updated_at", DateTime, onupdate=func.now()),
 )
-# full-time: ft, part-time: pt, contract/temp: ct, casual/vacation: cv
+
+messages = Table(
+    "messages",
+    metadata,
+    Column("id", Integer, Identity(), primary_key=True),
+    Column("sender_id", ForeignKey("auth_user.id", ondelete="CASCADE"), nullable=False),
+    Column("receiver_id", ForeignKey("auth_user.id", ondelete="CASCADE"), nullable=False),
+    Column("content", String, nullable=False),
+    Column("message_type", String, nullable=False),
+    Column("file_url", String),
+    Column("file_name", String),
+    Column("is_read", Boolean, server_default="false", nullable=False),
+    Column("created_at", DateTime, server_default=func.now(), nullable=False),
+)
+
+chat_rooms = Table(
+    "chat_rooms",
+    metadata,
+    Column("id", Integer, Identity(), primary_key=True),
+    Column("user1_id", ForeignKey("auth_user.id", ondelete="CASCADE"), nullable=False),
+    Column("user2_id", ForeignKey("auth_user.id", ondelete="CASCADE"), nullable=False),
+    Column("last_message_id", ForeignKey("messages.id", ondelete="SET NULL")),
+    Column("created_at", DateTime, server_default=func.now(), nullable=False),
+    Column("updated_at", DateTime, onupdate=func.now()),
+)
 
 async def fetch_one(select_query: Select | Insert | Update) -> dict[str, Any] | None:
     async with engine.begin() as conn:

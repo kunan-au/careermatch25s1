@@ -1,9 +1,8 @@
 from typing import Dict, Set
 from fastapi import WebSocket, WebSocketDisconnect
-from sqlalchemy.orm import Session
-from ..database import SessionLocal
+from sqlalchemy import insert
+from ..database import async_session, messages as MessageDB
 from .models import Message, MessageType
-from .database import Message as MessageDB
 import json
 import asyncio
 from datetime import datetime
@@ -68,28 +67,26 @@ async def handle_websocket(websocket: WebSocket, user_id: int):
         manager.disconnect(user_id)
 
 async def handle_text_message(message_data: dict, sender_id: int):
-    db = SessionLocal()
-    try:
+    async with async_session() as session:
         # Create message in database
-        message = MessageDB(
+        stmt = insert(MessageDB).values(
             sender_id=sender_id,
             receiver_id=message_data["receiver_id"],
             content=message_data["content"],
-            message_type=MessageType.TEXT,
+            message_type=MessageType.TEXT.value,
             created_at=datetime.utcnow()
         )
-        db.add(message)
-        db.commit()
-        db.refresh(message)
+        result = await session.execute(stmt)
+        await session.commit()
 
         # Prepare message for sending
         message_dict = {
-            "id": message.id,
+            "id": result.inserted_primary_key[0],
             "sender_id": sender_id,
             "receiver_id": message_data["receiver_id"],
             "content": message_data["content"],
             "type": "text",
-            "created_at": message.created_at.isoformat()
+            "created_at": datetime.utcnow().isoformat()
         }
 
         # Send to receiver if online
@@ -97,36 +94,32 @@ async def handle_text_message(message_data: dict, sender_id: int):
             json.dumps(message_dict),
             message_data["receiver_id"]
         )
-    finally:
-        db.close()
 
 async def handle_file_message(message_data: dict, sender_id: int):
-    db = SessionLocal()
-    try:
+    async with async_session() as session:
         # Create message in database
-        message = MessageDB(
+        stmt = insert(MessageDB).values(
             sender_id=sender_id,
             receiver_id=message_data["receiver_id"],
             content=message_data["content"],
-            message_type=MessageType.FILE,
+            message_type=MessageType.FILE.value,
             file_url=message_data.get("file_url"),
             file_name=message_data.get("file_name"),
             created_at=datetime.utcnow()
         )
-        db.add(message)
-        db.commit()
-        db.refresh(message)
+        result = await session.execute(stmt)
+        await session.commit()
 
         # Prepare message for sending
         message_dict = {
-            "id": message.id,
+            "id": result.inserted_primary_key[0],
             "sender_id": sender_id,
             "receiver_id": message_data["receiver_id"],
             "content": message_data["content"],
             "type": "file",
-            "file_url": message.file_url,
-            "file_name": message.file_name,
-            "created_at": message.created_at.isoformat()
+            "file_url": message_data.get("file_url"),
+            "file_name": message_data.get("file_name"),
+            "created_at": datetime.utcnow().isoformat()
         }
 
         # Send to receiver if online
@@ -134,8 +127,6 @@ async def handle_file_message(message_data: dict, sender_id: int):
             json.dumps(message_dict),
             message_data["receiver_id"]
         )
-    finally:
-        db.close()
 
 async def handle_join_room(message_data: dict, user_id: int):
     room_id = message_data["room_id"]
