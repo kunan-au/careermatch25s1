@@ -15,6 +15,7 @@ import ProfileInfo from "./pages/ProfileInfo";
 import ProfileFavorites from "./pages/ProfileFavorites";
 import ProfileHistory from "./pages/ProfileHistory";
 import MyNetwork from "./pages/MyNetwork/index";
+import MessagingPage from "./pages/Messaging";
 
 const router = createBrowserRouter([
   {
@@ -46,6 +47,7 @@ const router = createBrowserRouter([
       { path: "homePage", element: <HomePage /> },
       { path: "post", element: <JobPost /> },
       { path: "network", element: <MyNetwork /> },
+      { path: "messaging", element: <MessagingPage /> },
     ],
   },
   { path: "/terms-of-service", element: <TermsOfService /> },
