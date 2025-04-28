@@ -1,4 +1,5 @@
 export default function ProfileHistory() {
+    /*A page for history */
     return (
         <div className="text-center bg-gray-50">
             <h1 className="w-full text-center text-3xl font-bold py-10">
