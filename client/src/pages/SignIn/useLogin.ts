@@ -33,12 +33,21 @@ export function useLogin() {
     mutationFn: loginUser,
     onSuccess: async (data, variables) => {
       localStorage.setItem("access_token", data?.access_token ?? "");
+      localStorage.setItem("refresh_token", data?.refresh_token ?? "");
+      
+      if (data?.access_token) {
+        api.defaults.headers.common['Authorization'] = `Bearer ${data.access_token}`;
+      }
 
       try {
         const profile = await api.get(`/users/${variables.email}`);
         const realRole = profile.data.role;
 
         if (realRole !== variables.role) {
+          localStorage.removeItem("access_token");
+          localStorage.removeItem("refresh_token");
+          delete api.defaults.headers.common['Authorization'];
+          
           throw new Error(
             `This account is registered as a "${realRole}". Please log in with the correct role.`
           );
@@ -52,6 +61,10 @@ export function useLogin() {
       }
     },
     onError: (err) => {
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("refresh_token");
+      delete api.defaults.headers.common['Authorization'];
+      
       if (axios.isAxiosError(err) && err.response?.data?.detail) {
         toast.error(err.response.data.detail);
       } else {

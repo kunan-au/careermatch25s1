@@ -17,11 +17,12 @@ services:
       - REDIS_PORT=6379
       - JWT_ALG=HS256
       - JWT_SECRET=your-super-secret-key-change-this
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/postgres
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/postgres
       - REDIS_URL=redis://redis:6379
+      - ENVIRONMENT=LOCAL
+      - SENTRY_DSN=https://fake-dsn@sentry.example.com/1
       - CORS_ORIGINS=http://localhost:5173
       - CORS_HEADERS=*
-      - CORS_CREDENTIALS=true
     depends_on:
       - db
       - redis
