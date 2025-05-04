@@ -17,6 +17,7 @@ import ProfileHistory from "./pages/ProfileHistory";
 import MyNetwork from "./pages/MyNetwork/index";
 import MessagingPage from "./pages/Messaging";
 import PostedJob from "./pages/PostedJob";
+import CandidateList from "./pages/CandidateList";
 
 const router = createBrowserRouter([
   {
@@ -49,7 +50,8 @@ const router = createBrowserRouter([
       { path: "post", element: <JobPost /> },
       { path: "network", element: <MyNetwork /> },
       { path: "messaging", element: <MessagingPage /> },
-      { path: "postedjob", element: <PostedJob heading="My Posted Jobs" /> },
+      { path: "postedjob", element: <PostedJob  /> },
+      { path: "candidates", element: <CandidateList  /> },
     ],
   },
   { path: "/terms-of-service", element: <TermsOfService /> },

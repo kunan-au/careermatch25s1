@@ -34,7 +34,7 @@ const RecruiterJobCard: FC<JobProps> = ({ jobKey, jobTitle, jobType, jobField, l
             className="bg-green-600 text-white font-medium px-4 py-2 rounded-md flex gap-1 items-center"
             onClick={() => navigate(`/jobs/${jobKey}`)}
           >
-            Edited
+            View
           </Button>
         </div>
       </div>
