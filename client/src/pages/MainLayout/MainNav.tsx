@@ -106,7 +106,7 @@ const MainNav = () => {
             Post Job
           </NavLink>
           <NavLink
-            to="recruiterDashboard"
+            to="postedjob"
             className={({ isActive }) =>
               isActive
                 ? "text-primary text-lg font-medium"

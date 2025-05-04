@@ -16,3 +16,6 @@ pinecone==6.0.*
 pandas==2.2.*
 openai==1.70.*
 sentry-sdk==2.25.*
+pydantic[email]
+asyncpg
+boto3
