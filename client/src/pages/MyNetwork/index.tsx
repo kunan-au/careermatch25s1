@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 
 const fakeConnections = [
@@ -30,6 +30,16 @@ export default function MyNetwork() {
     }
   };
 
+  // 👇 Helper function to get initials like "AJ", "ML"
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .slice(0, 2)
+      .map((part) => part[0])
+      .join("")
+      .toUpperCase();
+  };
+
   return (
     <>
       <h1 className="w-full text-center text-3xl font-bold py-10 bg-gray-50">
@@ -46,8 +56,9 @@ export default function MyNetwork() {
                 <CardContent className="flex justify-between items-center p-4">
                   <div className="flex items-center gap-x-6">
                     <Avatar>
-                      <AvatarImage src={`https://i.pravatar.cc/80?u=${user.name}`} />
-                      <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                      <AvatarFallback className="font-bold text-xl tracking-wide">
+                        {getInitials(user.name)}
+                      </AvatarFallback>
                     </Avatar>
                     <div className="flex flex-col">
                       <span className="font-medium">{user.name}</span>
@@ -80,8 +91,9 @@ export default function MyNetwork() {
                   <CardContent className="flex justify-between items-center p-4">
                     <div className="flex items-center gap-x-6">
                       <Avatar>
-                        <AvatarImage src={`https://i.pravatar.cc/80?u=${user.name}`} />
-                        <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                        <AvatarFallback className="font-bold text-xl tracking-wide">
+                          {getInitials(user.name)}
+                        </AvatarFallback>
                       </Avatar>
                       <div className="flex flex-col">
                         <span className="font-medium">{user.name}</span>
