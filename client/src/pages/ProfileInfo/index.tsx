@@ -16,8 +16,7 @@ import { useProfile } from "./useProfile";
 import { useUser } from "../SignIn/useUser";
 import { useProfileUpdate } from "./useProfileUpdate";
 import { useAvatarUpdate } from "./useAvatarUpdate";
-import { useResumeUpdate } from "./useResumeUpdate";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const defaultInfoData = {
   email: "string",
@@ -41,42 +40,44 @@ export default function ProfileInfo() {
   const { name, avatar, resume } = user_info || defaultInfoData;
 
   const { profileUpdate } = useProfileUpdate();
-
   const { updateAvatar } = useAvatarUpdate();
 
-  const { updateResume } = useResumeUpdate();
+  const [resumePreview, setResumePreview] = useState<string | null>(null);
 
-  const [resumeFile, setResumeFile] = useState<File | null>(null);
+  // default resume URL
+  const defaultResumeURL = "/sample-resume.pdf";
 
+  // Load stored resume preview URL from localStorage on mount
+  useEffect(() => {
+    const storedPreview = localStorage.getItem("resumePreview");
+    if (storedPreview) {
+      setResumePreview(storedPreview);
+    }
+  }, []);
+
+  // Handle resume file selection and update preview
   const handleResumeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
-      setResumeFile(event.target.files[0]);
+      const file = event.target.files[0];
+      const previewURL = URL.createObjectURL(file);
+      setResumePreview(previewURL);
+      localStorage.setItem("resumePreview", previewURL); // Save preview URL in localStorage
     }
   };
 
-  const handleResumeSubmit = async (
-    event: React.FormEvent<HTMLFormElement>
-  ) => {
-    event.preventDefault();
-    if (resumeFile) {
-      await updateResume({ email, file: resumeFile });
-    }
-  };
-
-  const handleUpdateAvatar = async (
-    event: React.FormEvent<HTMLFormElement>
-  ) => {
+  // Handle avatar update submission
+  const handleUpdateAvatar = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     const file = formData.get("avatar") as File;
-
     await updateAvatar({ email, file });
   };
 
+  // Handle profile info submission
   const handleSubmitProfile = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
-    console.log(formData);
+
     const userData: UserData = {
       email,
       name: formData.get("name") as string,
@@ -93,9 +94,11 @@ export default function ProfileInfo() {
       </h1>
 
       <div className="flex items-center justify-center gap-20 max-[950px]:flex-col">
+        {/* Left side: Avatar and profile details */}
         <div className="flex flex-col gap-10 items-center">
           <div className="bg-white overflow-hidden shadow rounded-lg border h-96">
             <div className="px-4 py-7 sm:px-6 flex items-center gap-5">
+              {/* Avatar edit dialog */}
               <Dialog>
                 <DialogTrigger>
                   <Avatar className="h-20 w-20">
@@ -150,33 +153,31 @@ export default function ProfileInfo() {
                 </p>
               </div>
             </div>
+
+            {/* Display profile info */}
             <div className="border-t border-gray-200 px-4 py-5 sm:p-0">
               <dl className="sm:divide-y sm:divide-gray-200">
-                <div className="py-3 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                <div className="py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                   <dt className="text-sm font-medium text-gray-500">Name</dt>
-                  <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                  <dd className="text-sm text-gray-900 sm:col-span-2">
                     {name ? name : "Anonymous"}
                   </dd>
                 </div>
-                <div className="py-3 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                  <dt className="text-sm font-medium text-gray-500">
-                    Email address
-                  </dt>
-                  <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                <div className="py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                  <dt className="text-sm font-medium text-gray-500">Email address</dt>
+                  <dd className="text-sm text-gray-900 sm:col-span-2">
                     {email}
                   </dd>
                 </div>
-                <div className="py-3 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                  <dt className="text-sm font-medium text-gray-500">
-                    Phone number
-                  </dt>
-                  <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                <div className="py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                  <dt className="text-sm font-medium text-gray-500">Phone number</dt>
+                  <dd className="text-sm text-gray-900 sm:col-span-2">
                     +61 0123456789
                   </dd>
                 </div>
-                <div className="py-3 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                <div className="py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                   <dt className="text-sm font-medium text-gray-500">Address</dt>
-                  <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                  <dd className="text-sm text-gray-900 sm:col-span-2">
                     108 North Rd, Acton ACT 2601
                   </dd>
                 </div>
@@ -184,6 +185,7 @@ export default function ProfileInfo() {
             </div>
           </div>
 
+          {/* Profile edit dialog */}
           <Dialog>
             <DialogTrigger asChild>
               <Button variant="outline" className="mb-5 mx-auto">
@@ -194,8 +196,7 @@ export default function ProfileInfo() {
               <DialogHeader>
                 <DialogTitle>Edit profile</DialogTitle>
                 <DialogDescription>
-                  Make changes to your profile here. Click save when you're
-                  done.
+                  Make changes to your profile here. Click save when you're done.
                 </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleSubmitProfile}>
@@ -247,21 +248,29 @@ export default function ProfileInfo() {
           </Dialog>
         </div>
 
+        {/* Right side: Resume section */}
         <div className="flex flex-col gap-10 items-center">
           <div>
             <div className="overflow-hidden rounded-lg shadow">
-              <iframe
-                src={
-                  resume
-                    ? `https://careermatch-resume-2024.s3.ap-southeast-2.amazonaws.com/${resume}`
-                    : "./sample-resume.pdf"
-                }
-                // src="./sample-resume.pdf"
-                className="w-full h-96"
-              ></iframe>
+              {resumePreview || resume ? (
+                <iframe
+                  src={
+                    resumePreview ||
+                    (resume
+                      ? `https://careermatch-resume-2024.s3.ap-southeast-2.amazonaws.com/${resume}`
+                      : defaultResumeURL) //default resume URL
+                  }
+                  className="w-full h-96"
+                ></iframe>
+              ) : (
+                <div className="w-full h-96 bg-gray-200 flex items-center justify-center">
+                  <p className="text-gray-500">No resume uploaded</p>
+                </div>
+              )}
             </div>
           </div>
 
+          {/* Resume update dialog */}
           <Dialog>
             <DialogTrigger asChild>
               <Button variant="outline" className="mb-5 mx-auto">
@@ -276,7 +285,7 @@ export default function ProfileInfo() {
                   Click save when you're done.
                 </DialogDescription>
               </DialogHeader>
-              <form onSubmit={handleResumeSubmit}>
+              <form>
                 <div className="grid gap-4 py-4">
                   <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="resume" className="text-right">
@@ -293,7 +302,7 @@ export default function ProfileInfo() {
                 </div>
                 <DialogFooter>
                   <DialogClose>
-                    <Button type="submit">Save changes</Button>
+                    <Button type="button">Save changes</Button>
                   </DialogClose>
                 </DialogFooter>
               </form>
