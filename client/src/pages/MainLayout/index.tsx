@@ -1,7 +1,7 @@
 import Footer from "@/pages/MainLayout/Footer";
 import MainNav from "./MainNav";
 import { Outlet } from "react-router-dom";
-import { ChatWindow } from '@/components/Chat/ChatWindow';
+import AIAssistantWindow from '@/components/AIAssistant/AIAssistantWindow';
 
 export default function MainLayout() {
   return (
@@ -10,7 +10,7 @@ export default function MainLayout() {
       <main className="flex-1">
         <Outlet />
       </main>
-      <ChatWindow />
+      <AIAssistantWindow />
       <Footer />
     </div>
   );

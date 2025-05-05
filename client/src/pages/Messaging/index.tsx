@@ -645,7 +645,19 @@ export default function MessagingPage() {
               >
                 <div className="flex items-start gap-3">
                   <div className="relative">
-                    <div className="w-10 h-10 rounded-full bg-gray-200" />
+                    {contact.avatar ? (
+                      <img
+                        src={contact.avatar}
+                        alt={contact.name}
+                        className="w-10 h-10 rounded-full"
+                      />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+                        <span className="text-gray-600 font-medium">
+                          {contact.name.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                    )}
                     {contact.isOnline && (
                       <div className="absolute bottom-0 right-0 w-2 h-2 bg-green-500 rounded-full border-2 border-white" />
                     )}
@@ -677,7 +689,19 @@ export default function MessagingPage() {
             <div className="h-full flex flex-col">
               <div className="p-4 border-b">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gray-200" />
+                  {selectedContact.avatar ? (
+                    <img
+                      src={selectedContact.avatar}
+                      alt={selectedContact.name}
+                      className="w-10 h-10 rounded-full"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+                      <span className="text-gray-600 font-medium">
+                        {selectedContact.name.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                  )}
                   <div>
                     <h2 className="font-medium text-sm">{selectedContact.name}</h2>
                     {selectedContact.title && (
@@ -696,7 +720,21 @@ export default function MessagingPage() {
                       className={`flex ${message.sender === 'Me' ? 'justify-end' : 'justify-start'}`}
                     >
                       {message.sender !== 'Me' && (
-                        <div className="w-8 h-8 rounded-full bg-gray-200 mr-2 flex-shrink-0" />
+                        <div className="flex-shrink-0 mr-2">
+                          {message.avatar ? (
+                            <img
+                              src={message.avatar}
+                              alt={message.sender}
+                              className="w-8 h-8 rounded-full"
+                            />
+                          ) : (
+                            <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
+                              <span className="text-gray-600 text-xs font-medium">
+                                {message.sender.charAt(0).toUpperCase()}
+                              </span>
+                            </div>
+                          )}
+                        </div>
                       )}
                       <div 
                         className={`max-w-[70%] px-4 py-2 rounded-lg ${
@@ -708,7 +746,11 @@ export default function MessagingPage() {
                         {renderMessageContent(message)}
                       </div>
                       {message.sender === 'Me' && (
-                        <div className="w-8 h-8 rounded-full bg-gray-200 ml-2 flex-shrink-0" />
+                        <div className="flex-shrink-0 ml-2">
+                          <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
+                            <span className="text-gray-600 text-xs font-medium">M</span>
+                          </div>
+                        </div>
                       )}
                     </div>
                   ))}
