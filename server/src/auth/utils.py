@@ -13,7 +13,7 @@ def get_refresh_token_settings(
         "httponly": True,
         "samesite": "lax" if not auth_config.SECURE_COOKIES else "none",
         "secure": auth_config.SECURE_COOKIES,
-        "domain": settings.SITE_DOMAIN,
+        # "domain": settings.SITE_DOMAIN,
     }
     if expired:
         return base_cookie

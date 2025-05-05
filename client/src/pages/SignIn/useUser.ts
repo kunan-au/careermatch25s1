@@ -51,7 +51,7 @@ async function getUserProfile(): Promise<AuthResponse> {
     if (!accessToken) {
       console.log("No access token in localStorage, trying to refresh");
       const responseFromUpdateTokens = await updateTokens();
-      accessToken = responseFromUpdateTokens?.access_token;
+      accessToken = responseFromUpdateTokens?.access_token ?? null;
       if (!accessToken) {
         console.log("Failed to get access token from refresh");
         return undefined;

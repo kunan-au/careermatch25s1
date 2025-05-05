@@ -5,7 +5,10 @@ import { api } from "@/services/api";
 
 const logoutUser = async () => {
   try {
-    const response = await api.delete("/auth/users/tokens");
+    const response = await api.delete("/auth/users/tokens", {
+      withCredentials: true,
+    });
+    
 
     // only 200 status code is considered as success
     if (response.status === 200) {
