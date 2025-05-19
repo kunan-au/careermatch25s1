@@ -18,12 +18,22 @@ const JobCard: FC<JobProps> = ({ jobKey, jobTitle, jobType, jobField, location }
   const [matchScore, setMatchScore] = useState(0); // State to store the match score
 
   useEffect(() => {
-    // Generate a random match score between 50 and 100
+    
+    const favorites = JSON.parse(localStorage.getItem('favoriteJobs') || '[]');
+    setIsFavorited(favorites.some((job: any) => job.id === jobKey));
     setMatchScore(Math.floor(Math.random() * 51) + 50);
-  }, []);
+  }, [jobKey]);
 
   // Toggle the favorite status
   const toggleFavorite = () => {
+    const favorites = JSON.parse(localStorage.getItem('favoriteJobs') || '[]');
+    const newFavorites = isFavorited
+      ? favorites.filter((job: any) => job.id !== jobKey)
+      : [...favorites, { id: jobKey, title: jobTitle, job_type: jobType, company: location }];
+    
+    localStorage.setItem('favoriteJobs', JSON.stringify(newFavorites));
+    
+    window.dispatchEvent(new Event('storage'));
     setIsFavorited(!isFavorited);
   };
 
