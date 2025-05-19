@@ -1,37 +1,46 @@
-// import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 
 const fakeApplicants = [
   {
-    name: "Alice Johnson",
-    title: "Frontend Developer",
-    appliedTo: "Frontend Role",
+    name: "Liam Turner",
+    title: "Full Stack Developer",
+    appliedTo: "Senior Web Developer",
   },
   {
-    name: "Michael Lee",
-    title: "Product Manager",
-    appliedTo: "PM Role",
+    name: "Natalie Brooks",
+    title: "UI/UX Designer",
+    appliedTo: "Product Designer",
   },
   {
-    name: "Emily Chen",
-    title: "Backend Engineer",
-    appliedTo: "Backend Role",
+    name: "Jason Patel",
+    title: "Data Scientist",
+    appliedTo: "AI/ML Researcher",
   },
   {
-    name: "John Smith",
-    title: "DevOps Engineer",
-    appliedTo: "DevOps Role",
+    name: "Grace Lin",
+    title: "Mobile Developer",
+    appliedTo: "iOS Developer",
   },
   {
-    name: "Sophia Davis",
-    title: "Software Engineer",
-    appliedTo: "Graduate SWE",
+    name: "Ethan Wright",
+    title: "Cloud Engineer",
+    appliedTo: "AWS Solutions Architect",
   },
 ];
 
 export default function CandidateList() {
+  // 提取名字首字母（如 Grace Lin → GL）
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .slice(0, 2)
+      .map((part) => part[0])
+      .join("")
+      .toUpperCase();
+  };
+
   return (
     <>
       <h1 className="w-full text-center text-3xl font-bold py-10 bg-gray-50">
@@ -47,8 +56,9 @@ export default function CandidateList() {
                 <CardContent className="flex justify-between items-center p-4">
                   <div className="flex items-center gap-x-6">
                     <Avatar>
-                      <AvatarImage src={`https://i.pravatar.cc/80?u=${user.name}`} />
-                      <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                      <AvatarFallback className="font-bold text-xl tracking-wide">
+                        {getInitials(user.name)}
+                      </AvatarFallback>
                     </Avatar>
                     <div className="flex flex-col">
                       <span className="font-medium">{user.name}</span>

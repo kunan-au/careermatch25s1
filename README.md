@@ -55,15 +55,20 @@ This platform is built on **AWS Cloud** infrastructure, incorporating an **end-t
 
   ![Skill Analysis](./image/skill_analysis_new.png)
 
-### 6. Networking Features （Under Developing）
+### 6. Networking Features 
 
 - **Peer-to-Peer Connections**: Allows users to connect with peers, mentors, and industry professionals to expand their professional network.
+  ![Networking](./image/networking.png)
 
 ### 7. Career Path Prediction (Under Developing)
 
 - **Career Trajectory Forecasting**: Predicts potential career paths by analyzing past job transitions and recommending optimal job movements using advanced modeling techniques.
 
+### 8. AI Assistant 
 
+- **Intelligent Career Support**: Provides personalized job suggestions, answers user queries, and collects feedback to improve job matching through conversational AI.
+
+![AI Assistant](./image/ai_assistant.png)
 
 ## Project Startup Guide
 
