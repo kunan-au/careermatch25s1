@@ -4,15 +4,15 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
-  // 删除 server 配置，让它使用默认的 5173 端口
+  // Remove server configuration to use default port 5173
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, 'src')  // 确保这个路径正确
+      '@': path.resolve(__dirname, 'src')  // Ensure this path is correct
     }
   },
   server: {
-    port: 5173,  // 改回默认端口
-    strictPort: true,  // 如果端口被占用就报错
+    port: 5173,  // Use default port
+    strictPort: true,  // Throw error if port is in use
     proxy: {
       '/api': {
         target: 'http://localhost:8000',

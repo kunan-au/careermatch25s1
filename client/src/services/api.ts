@@ -15,7 +15,7 @@ const axiosInstance = axios.create({
   },
 }) as CustomApi;
 
-// 请求拦截器 - 自动添加token
+// Request interceptor - automatically add token
 axiosInstance.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("access_token");
@@ -29,18 +29,18 @@ axiosInstance.interceptors.request.use(
   }
 );
 
-// 响应拦截器 - 处理401错误
+// Response interceptor - handle 401 errors
 axiosInstance.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
     
-    // 如果是401错误且不是刷新token的请求
+    // If it's a 401 error and not a token refresh request
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       
       try {
-        // 尝试刷新token
+        // Try to refresh token
         const refreshToken = localStorage.getItem("refresh_token");
         if (refreshToken) {
           const response = await axiosInstance.put("/auth/users/tokens", {});
@@ -48,7 +48,7 @@ axiosInstance.interceptors.response.use(
           if (response.data?.access_token) {
             localStorage.setItem("access_token", response.data.access_token);
             
-            // 使用新token重试原始请求
+            // Retry original request with new token
             originalRequest.headers.Authorization = `Bearer ${response.data.access_token}`;
             return axiosInstance(originalRequest);
           }

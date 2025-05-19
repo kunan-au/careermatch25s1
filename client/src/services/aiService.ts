@@ -128,7 +128,7 @@ export const generateId = (): string => {
 // Check if OpenAI integration is working
 export const isUsingOpenAI = async (): Promise<boolean> => {
   try {
-    // 打印环境变量以便调试
+    // Print environment variables for debugging
     console.log('ENV check - VITE_OPENAI_API_KEY exists:', !!import.meta.env.VITE_OPENAI_API_KEY);
     
     const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
@@ -137,7 +137,7 @@ export const isUsingOpenAI = async (): Promise<boolean> => {
       return false;
     }
     
-    // 验证API密钥格式
+    // Validate API key format
     if (!apiKey.startsWith('sk-') || apiKey.length < 20) {
       console.warn('OpenAI API key format appears to be invalid');
       return false;
