@@ -13,6 +13,11 @@ import HomePage from "./pages/HomePage";
 import JobPost from "./pages/JobPost";
 import ProfileInfo from "./pages/ProfileInfo";
 import ProfileFavorites from "./pages/ProfileFavorites";
+import ProfileHistory from "./pages/ProfileHistory";
+import MyNetwork from "./pages/MyNetwork/index";
+import MessagingPage from "./pages/Messaging";
+import PostedJob from "./pages/PostedJob";
+import CandidateList from "./pages/CandidateList";
 
 const router = createBrowserRouter([
   {
@@ -38,10 +43,15 @@ const router = createBrowserRouter([
         children: [
           { index: true, element: <ProfileInfo /> },
           { path: "favorites", element: <ProfileFavorites /> },
+          { path: "history", element: <ProfileHistory /> },
         ],
       },
       { path: "homePage", element: <HomePage /> },
       { path: "post", element: <JobPost /> },
+      { path: "network", element: <MyNetwork /> },
+      { path: "messaging", element: <MessagingPage /> },
+      { path: "postedjob", element: <PostedJob  /> },
+      { path: "candidates", element: <CandidateList  /> },
     ],
   },
   { path: "/terms-of-service", element: <TermsOfService /> },

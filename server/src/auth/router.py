@@ -8,6 +8,7 @@ from src.auth.dependencies import (
     valid_refresh_token_user,
     valid_user_create,
 )
+from src.users.service import get_user_profile
 from src.auth.jwt import parse_jwt_user_data
 from src.auth.schemas import AccessTokenResponse, AuthUser, JWTData, UserResponse
 
@@ -38,8 +39,14 @@ async def get_my_account(
 @router.post("/users/tokens", response_model=AccessTokenResponse)
 async def auth_user(auth_data: AuthUser, response: Response) -> AccessTokenResponse:
     user = await service.authenticate_user(auth_data)
-    refresh_token_value = await service.create_refresh_token(user_id=user["id"])
 
+    # add verity role
+    profile = await get_user_profile(auth_data.email)
+    if profile["role"] != auth_data.role:
+        from src.exceptions import PermissionDenied
+        raise PermissionDenied(detail=f"Incorrect role. This account is registered as '{profile['role']}'.")
+
+    refresh_token_value = await service.create_refresh_token(user_id=user["id"])
     response.set_cookie(**utils.get_refresh_token_settings(refresh_token_value))
 
     return AccessTokenResponse(

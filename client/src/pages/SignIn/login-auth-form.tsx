@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useLogin } from "./useLogin";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 interface UserAuthFormProps extends React.HTMLAttributes<HTMLDivElement> {}
@@ -12,11 +12,17 @@ interface UserAuthFormProps extends React.HTMLAttributes<HTMLDivElement> {}
 export function LoginAuthForm({ className, ...props }: UserAuthFormProps) {
   const navigate = useNavigate();
   const { status, login } = useLogin();
+  const [role, setRole] = useState<"recruiter" | "candidate">("candidate");
 
   useEffect(() => {
     if (status === "success") {
+      const storedRole = localStorage.getItem("role");
       setTimeout(() => {
-        navigate("/jobs");
+        if (storedRole === "recruiter") {
+          navigate("/post");
+        } else {
+          navigate("/jobs");
+        }
       }, 1000);
     }
   }, [status, navigate]);
@@ -27,13 +33,28 @@ export function LoginAuthForm({ className, ...props }: UserAuthFormProps) {
     const email = event.currentTarget.email.value;
     const password = event.currentTarget.password.value;
 
-    login({ email, password });
+    localStorage.setItem("role", role); // ✅ Save role to localStorage
+    login({ email, password, role });   // ✅ Send role to backend if needed
   }
 
   return (
     <div className={cn("grid gap-6", className)} {...props}>
       <form onSubmit={onSubmit}>
         <div className="grid gap-2">
+          <div className="grid gap-1">
+            <Label htmlFor="role">Sign in as</Label>
+            <select
+              id="role"
+              name="role"
+              className="border border-gray-300 rounded-md p-2"
+              value={role}
+              onChange={(e) => setRole(e.target.value as "recruiter" | "candidate")}
+            >
+              <option value="candidate">Candidate</option>
+              <option value="recruiter">Recruiter</option>
+            </select>
+          </div>
+
           <div className="grid gap-1">
             <Label className="sr-only" htmlFor="email">
               Email
@@ -46,9 +67,9 @@ export function LoginAuthForm({ className, ...props }: UserAuthFormProps) {
               autoCapitalize="none"
               autoComplete="email"
               autoCorrect="off"
-              // disabled={isLoading}
             />
           </div>
+
           <div className="grid gap-1">
             <Label className="sr-only" htmlFor="password">
               Password
@@ -61,16 +82,10 @@ export function LoginAuthForm({ className, ...props }: UserAuthFormProps) {
               autoCapitalize="none"
               autoComplete="current-password"
               autoCorrect="off"
-              // disabled={isLoading}
             />
           </div>
-          <Button
-            // disabled={isLoading}
-            className="mt-10"
-          >
-            {/* {isLoading && (
-              <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
-            )} */}
+
+          <Button className="mt-10">
             Sign In with Email
           </Button>
         </div>

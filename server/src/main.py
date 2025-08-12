@@ -3,35 +3,51 @@ from typing import AsyncGenerator
 
 import redis.asyncio as aioredis
 import sentry_sdk
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from starlette.middleware.cors import CORSMiddleware
 
 from src import redis
+from src.auth.exceptions import RoleMismatch
 from src.auth.router import router as auth_router
 from src.config import app_configs, settings
+from src.database import metadata, engine
 from src.external_service.router import router as external_service_router
 from src.jobs.router import router as jobs_router
 from src.users.router import router as users_router
+from .messaging.routes import router as messaging_router
 
 
 @asynccontextmanager
 async def lifespan(_application: FastAPI) -> AsyncGenerator:
-    # Startup
+    # Connect to Redis
     pool = aioredis.ConnectionPool.from_url(
         str(settings.REDIS_URL), max_connections=10, decode_responses=True
     )
     redis.redis_client = aioredis.Redis(connection_pool=pool)
 
+    # Create database tables if not already present
+    async with engine.begin() as conn:
+        await conn.run_sync(metadata.create_all)
+
     yield
 
-    if settings.ENVIRONMENT.is_testing:
-        return
-    # Shutdown
-    await pool.disconnect()
+    # Disconnect Redis on shutdown
+    if not settings.ENVIRONMENT.is_testing:
+        await pool.disconnect()
 
 
 app = FastAPI(**app_configs, lifespan=lifespan)
 
+# Handle RoleMismatch errors with a custom message
+@app.exception_handler(RoleMismatch)
+async def role_mismatch_exception_handler(request: Request, exc: RoleMismatch):
+    return JSONResponse(
+        status_code=403,
+        content={"detail": "This account is registered with a different role. Please log in with the correct role."},
+    )
+
+# CORS configuration
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.CORS_ORIGINS,
@@ -41,18 +57,19 @@ app.add_middleware(
     allow_headers=settings.CORS_HEADERS,
 )
 
+# Sentry setup for deployed environments
 if settings.ENVIRONMENT.is_deployed:
     sentry_sdk.init(
         dsn=settings.SENTRY_DSN,
         environment=settings.ENVIRONMENT,
     )
 
-
+# Health check endpoint
 @app.get("/healthcheck", include_in_schema=False)
 async def healthcheck() -> dict[str, str]:
     return {"status": "ok"}
 
-
+# Register all routers
 app.include_router(auth_router, prefix="/auth", tags=["Auth"])
 app.include_router(jobs_router, prefix="/jobs", tags=["Jobs"])
 app.include_router(
@@ -61,4 +78,4 @@ app.include_router(
 app.include_router(
     users_router, prefix="/users", tags=["Users"], responses={404: {"description": "Not found"}}
 )
-
+app.include_router(messaging_router, prefix="/api/messaging", tags=["messaging"])

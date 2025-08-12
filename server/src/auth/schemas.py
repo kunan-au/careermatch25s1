@@ -1,7 +1,7 @@
 import re
 
 from pydantic import EmailStr, Field, field_validator
-
+from typing import Literal
 from src.models import CustomModel
 
 STRONG_PASSWORD_PATTERN = re.compile(r"^(?=.*[\d])(?=.*[!@#$%^&*])[\w!@#$%^&*]{6,128}$")
@@ -10,6 +10,7 @@ STRONG_PASSWORD_PATTERN = re.compile(r"^(?=.*[\d])(?=.*[!@#$%^&*])[\w!@#$%^&*]{6
 class AuthUser(CustomModel):
     email: EmailStr
     password: str = Field(min_length=6, max_length=128)
+    role: Literal["recruiter", "candidate"]
 
     @field_validator("password", mode="after")
     @classmethod

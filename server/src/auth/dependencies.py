@@ -1,12 +1,31 @@
 from datetime import datetime
 from typing import Any
 
-from fastapi import Cookie, Depends
+from fastapi import Cookie, Depends, HTTPException, status
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
-from src.auth import service
+from src.auth import service, jwt
 from src.auth.exceptions import EmailTaken, RefreshTokenNotValid
 from src.auth.schemas import AuthUser
 
+security = HTTPBearer()
+
+async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)) -> dict[str, Any]:
+    try:
+        token = credentials.credentials
+        payload = jwt.decode_jwt(token)
+        user = await service.get_user_by_id(payload.user_id)
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Could not validate credentials",
+            )
+        return user
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+        )
 
 async def valid_user_create(user: AuthUser) -> AuthUser:
     if await service.get_user_by_email(user.email):
